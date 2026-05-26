@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Registrations - Barangay Certificate System{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row mb-4">
+        <div class="col">
+            <h2 style="color: var(--primary-color);">
+                <i class="fas fa-clipboard-list"></i> Manage Registration Requests
+            </h2>
+        </div>
+    </div>
+
+    {% if messages %}
+        <div class="alert-messages mb-4">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Nav tabs for filtering -->
+    <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab">
+                Pending <span class="badge" style="background-color: var(--accent-color);">{{ pending_registrations.count }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="approved-tab" data-bs-toggle="tab" data-bs-target="#approved" type="button" role="tab">
+                Approved <span class="badge" style="background-color: #28a745;">{{ approved_registrations.count }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="rejected-tab" data-bs-toggle="tab" data-bs-target="#rejected" type="button" role="tab">
+                Rejected <span class="badge" style="background-color: #dc3545;">{{ rejected_registrations.count }}</span>
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab content -->
+    <div class="tab-content">
+        <!-- Pending Registrations -->
+        <div class="tab-pane fade show active" id="pending" role="tabpanel">
+            {% if pending_registrations %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead style="background-color: var(--primary-color); color: white;">
+                            <tr>
+                                <th>Full Name</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Address</th>
+                                <th>Date Registered</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for registration in pending_registrations %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ registration.get_full_name }}</strong>
+                                    </td>
+                                    <td>{{ registration.username }}</td>
+                                    <td>{{ registration.email }}</td>
+                                    <td>{{ registration.address }}</td>
+                                    <td>
+                                        <small>{{ registration.registration_date|date:"M d, Y H:i" }}</small>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'accounts:approve_registration' registration.id %}" 
+                                           class="btn btn-sm btn-success" title="Approve">
+                                            <i class="fas fa-check"></i>
+                                        </a>
+                                        <a href="{% url 'accounts:reject_registration' registration.id %}" 
+                                           class="btn btn-sm btn-danger" title="Reject">
+                                            <i class="fas fa-times"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> No pending registration requests.
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Approved Registrations -->
+        <div class="tab-pane fade" id="approved" role="tabpanel">
+            {% if approved_registrations %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead style="background-color: #28a745; color: white;">
+                            <tr>
+                                <th>Full Name</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Address</th>
+                                <th>Approved Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for registration in approved_registrations %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ registration.get_full_name }}</strong>
+                                    </td>
+                                    <td>{{ registration.username }}</td>
+                                    <td>{{ registration.email }}</td>
+                                    <td>{{ registration.address }}</td>
+                                    <td>
+                                        <small>{{ registration.registration_date|date:"M d, Y H:i" }}</small>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> No approved registrations.
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Rejected Registrations -->
+        <div class="tab-pane fade" id="rejected" role="tabpanel">
+            {% if rejected_registrations %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead style="background-color: #dc3545; color: white;">
+                            <tr>
+                                <th>Full Name</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Address</th>
+                                <th>Rejection Reason</th>
+                                <th>Rejected Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for registration in rejected_registrations %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ registration.get_full_name }}</strong>
+                                    </td>
+                                    <td>{{ registration.username }}</td>
+                                    <td>{{ registration.email }}</td>
+                                    <td>{{ registration.address }}</td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ registration.rejection_reason|default:"No reason provided" }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <small>{{ registration.registration_date|date:"M d, Y H:i" }}</small>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> No rejected registrations.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

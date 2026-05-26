@@ -2,92 +2,483 @@
 
 {% block title %}Manage Requests - DBD{% endblock %}
 
+{% block extra_css %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   DESIGN TOKENS
+   ============================================================ */
+:root {
+    --navy:         #1e3a5f;
+    --navy-dark:    #162d4a;
+    --navy-faint:   #f0f4f8;
+    --slate:        #64748b;
+    --slate-light:  #94a3b8;
+    --green:        #3f7d58;
+    --green-dark:   #2e6040;
+    --green-faint:  #eef7f2;
+    --red:          #b45353;
+    --red-dark:     #9a3f3f;
+    --red-faint:    #fdf3f3;
+    --amber:        #8a6630;
+    --border:       #e5e7eb;
+    --border-soft:  #f1f4f7;
+    --bg:           #f8fafc;
+    --surface:      #ffffff;
+    --text-1:       #1e293b;
+    --text-2:       #64748b;
+    --text-3:       #94a3b8;
+    --radius-btn:   7px;
+    --radius-card:  12px;
+    --shadow-card:  0 1px 3px rgba(30,58,95,.06), 0 4px 20px rgba(30,58,95,.05);
+    --shadow-hover: 0 4px 14px rgba(30,58,95,.13);
+    --transition:   all .18s cubic-bezier(.4,0,.2,1);
+}
+
+/* ============================================================
+   BASE / PAGE
+   ============================================================ */
+body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--bg); }
+
+/* ============================================================
+   PAGE HEADER
+   ============================================================ */
+.page-header        { margin-bottom: 1.5rem; }
+.page-header-inner  { display: flex; align-items: center; gap: 10px; margin-bottom: 3px; }
+.header-icon {
+    width: 32px; height: 32px;
+    background: var(--navy-faint); border-radius: 8px;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--navy); font-size: 15px; flex-shrink: 0;
+}
+.page-header h1 {
+    font-size: 1.15rem; font-weight: 700;
+    letter-spacing: -.3px; color: var(--text-1); margin: 0;
+}
+.page-header .sub   { font-size: .875rem; color: var(--text-2); margin: 0; padding-left: 42px; }
+
+/* ============================================================
+   CARD
+   ============================================================ */
+.requests-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+}
+
+/* ============================================================
+   TABLE
+   ============================================================ */
+.requests-table { width: 100%; border-collapse: collapse; }
+
+.requests-table thead tr {
+    background: #f7f9fb;
+    border-bottom: 1px solid var(--border);
+}
+.requests-table thead th {
+    padding: .7rem 1rem;
+    font-size: .7rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .6px;
+    color: var(--slate); white-space: nowrap; text-align: left;
+}
+
+.requests-table tbody tr {
+    border-bottom: 1px solid var(--border-soft);
+    transition: background .12s;
+}
+.requests-table tbody tr:last-child { border-bottom: none; }
+.requests-table tbody tr:hover      { background: #fafbfd; }
+
+.requests-table tbody td {
+    padding: .85rem 1rem;
+    vertical-align: middle;
+    font-size: .875rem;
+    color: var(--text-1);
+}
+
+.td-primary { font-weight: 600; }
+.td-meta    { font-size: .75rem; color: var(--text-2); margin-top: 1px; }
+.td-date    { font-size: .8rem; color: var(--text-2); font-variant-numeric: tabular-nums; }
+
+/* ============================================================
+   STATUS BADGES
+   ============================================================ */
+.status-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: .2rem .6rem .2rem .5rem;
+    border-radius: 20px; font-size: .72rem; font-weight: 600;
+    border: 1px solid transparent; letter-spacing: .1px; white-space: nowrap;
+}
+.status-badge::before {
+    content: ''; width: 5px; height: 5px;
+    border-radius: 50%; flex-shrink: 0;
+}
+
+.badge-pending   { background: #fef8ec; color: #7a5820; border-color: #f0d9a0; }
+.badge-pending::before   { background: #a07030; }
+
+.badge-approved  { background: #eef4fd; color: #2e5fa3; border-color: #b8d0f5; }
+.badge-approved::before  { background: #3b70bf; }
+
+.badge-completed { background: var(--green-faint); color: #2a6644; border-color: #a5d9b8; }
+.badge-completed::before { background: var(--green); }
+
+.badge-rejected  { background: var(--red-faint); color: #8c3b3b; border-color: #f0bcbc; }
+.badge-rejected::before  { background: var(--red); }
+
+/* ============================================================
+   BUTTONS — shared base
+   ============================================================ */
+.btn-action {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: .32rem .75rem;
+    font-size: .78rem; font-weight: 600;
+    border-radius: var(--radius-btn);
+    border: 1px solid transparent;
+    cursor: pointer; text-decoration: none; white-space: nowrap;
+    transition: var(--transition); line-height: 1.45;
+    font-family: inherit; letter-spacing: .05px;
+    background: none;
+}
+.btn-action:hover       { transform: translateY(-1px); text-decoration: none; }
+.btn-action:active      { transform: translateY(0) !important; box-shadow: none !important; }
+.btn-action i           { font-size: .7rem; }
+
+/* Preview — neutral ghost */
+.btn-preview {
+    color: var(--slate);
+    background: var(--surface);
+    border-color: #cdd5df;
+}
+.btn-preview:hover {
+    background: #f3f6f9; color: var(--navy);
+    border-color: #aebacb;
+    box-shadow: 0 2px 8px rgba(30,58,95,.08);
+}
+
+/* Approve — muted solid green */
+.btn-approve {
+    color: #fff;
+    background: var(--green);
+    border-color: var(--green);
+}
+.btn-approve:hover {
+    background: var(--green-dark); border-color: var(--green-dark);
+    box-shadow: 0 2px 10px rgba(63,125,88,.22);
+}
+
+/* Reject — soft red ghost */
+.btn-reject {
+    color: var(--red);
+    background: var(--surface);
+    border-color: #ddb8b8;
+}
+.btn-reject:hover {
+    background: var(--red-faint); border-color: var(--red);
+    box-shadow: 0 2px 8px rgba(180,83,83,.1);
+}
+
+/* View Certificate — navy primary */
+.btn-view-cert {
+    color: #fff;
+    background: var(--navy);
+    border-color: var(--navy);
+}
+.btn-view-cert:hover {
+    background: var(--navy-dark); border-color: var(--navy-dark);
+    box-shadow: 0 2px 10px rgba(30,58,95,.25);
+}
+
+/* Action group wrapper */
+.action-group { display: flex; align-items: center; gap: .35rem; flex-wrap: wrap; }
+
+/* Rejected fallback label */
+.rejected-label {
+    font-size: .78rem; color: var(--text-3);
+    font-style: italic;
+    display: inline-flex; align-items: center; gap: .25rem;
+}
+.rejected-label i { font-size: .68rem; }
+
+/* ============================================================
+   MODAL OVERRIDES
+   ============================================================ */
+.modal-content {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    box-shadow: 0 8px 40px rgba(15,25,45,.16);
+    overflow: hidden;
+}
+.modal-header {
+    background: #f7f9fb;
+    border-bottom: 1px solid var(--border);
+    padding: .9rem 1.1rem;
+    display: flex; align-items: center; gap: 10px;
+}
+.modal-reject-icon {
+    width: 26px; height: 26px; border-radius: 6px;
+    background: var(--red-faint); border: 1px solid #f0bcbc;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: .75rem; color: var(--red); flex-shrink: 0;
+}
+.modal-title { font-size: .9rem; font-weight: 700; color: var(--text-1); }
+.modal-body  { padding: 1.1rem 1.2rem; }
+.modal-body p { font-size: .875rem; color: var(--text-2); margin-bottom: .9rem; line-height: 1.6; }
+
+.modal-footer {
+    background: #f7f9fb;
+    border-top: 1px solid var(--border);
+    padding: .75rem 1.2rem;
+    gap: .5rem;
+}
+
+.form-label-sm {
+    display: block; font-size: .7rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .5px;
+    color: var(--text-3); margin-bottom: .4rem;
+}
+.modal-body .form-control {
+    border-color: var(--border);
+    border-radius: var(--radius-btn);
+    font-size: .875rem; color: var(--text-1);
+    font-family: inherit;
+    transition: border-color .15s, box-shadow .15s;
+    background: var(--surface);
+}
+.modal-body .form-control:focus {
+    border-color: var(--navy);
+    box-shadow: 0 0 0 3px rgba(30,58,95,.1);
+}
+
+/* Modal footer buttons use btn-action too */
+.modal-footer .btn-cancel {
+    color: var(--slate);
+    background: var(--surface); border-color: #cdd5df;
+    padding: .35rem .85rem; font-size: .82rem;
+}
+.modal-footer .btn-cancel:hover { background: #f1f4f7; color: var(--text-1); border-color: #aebacb; }
+
+.modal-footer .btn-confirm-reject {
+    color: #fff;
+    background: var(--red); border-color: var(--red);
+    padding: .35rem .85rem; font-size: .82rem;
+}
+.modal-footer .btn-confirm-reject:hover {
+    background: var(--red-dark); border-color: var(--red-dark);
+    box-shadow: 0 2px 10px rgba(180,83,83,.22);
+}
+
+/* ============================================================
+   EMPTY STATE
+   ============================================================ */
+.empty-state         { padding: 4rem 2rem; text-align: center; }
+.empty-state i       { font-size: 2.5rem; color: var(--text-3); margin-bottom: .9rem; opacity: .5; }
+.empty-state h4      { font-size: .95rem; font-weight: 700; color: var(--text-2); margin-bottom: .3rem; }
+.empty-state p       { font-size: .875rem; color: var(--text-3); }
+
+/* ============================================================
+   RESPONSIVE — TABLE → CARDS (mobile)
+   ============================================================ */
+@media (max-width: 768px) {
+    .requests-table         { display: block; }
+    .requests-table thead   { display: none; }
+    .requests-table tbody   { display: block; }
+
+    .requests-table tbody tr {
+        display: block;
+        margin: .65rem .75rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-card);
+        background: var(--surface);
+        box-shadow: var(--shadow-card);
+        padding: .4rem .2rem;
+    }
+
+    .requests-table tbody td {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        padding: .55rem .85rem;
+        border: none;
+        border-bottom: 1px solid var(--border-soft);
+    }
+    .requests-table tbody td:last-child { border-bottom: none; }
+
+    .requests-table tbody td::before {
+        content: attr(data-label);
+        font-size: .67rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: .5px;
+        color: var(--text-3);
+        width: 35%; flex-shrink: 0; padding-top: .1rem;
+    }
+
+    .requests-table tbody td > span,
+    .requests-table tbody td > .status-badge,
+    .requests-table tbody td > .action-group,
+    .requests-table tbody td > a.btn-action {
+        width: 62%; text-align: right;
+    }
+
+    /* Action column stacks full-width */
+    .requests-table tbody td[data-label="Actions"] {
+        flex-direction: column; align-items: stretch; gap: .45rem;
+    }
+    .requests-table tbody td[data-label="Actions"]::before {
+        width: 100%; margin-bottom: .25rem;
+    }
+    .requests-table tbody td[data-label="Actions"] .action-group {
+        width: 100%; flex-direction: column;
+    }
+    .requests-table tbody td[data-label="Actions"] .btn-action,
+    .requests-table tbody td[data-label="Actions"] a.btn-action {
+        width: 100%; justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .requests-table tbody td::before { width: 38%; }
+    .btn-action { font-size: .75rem; padding: .38rem .7rem; }
+}
+
+/* Modal responsive */
+@media (max-width: 576px) {
+    .modal-dialog { margin: .65rem; }
+    .modal-footer { flex-direction: column-reverse; }
+    .modal-footer .btn-action { width: 100%; justify-content: center; margin: 0; }
+}
+</style>
+{% endblock %}
+
+
 {% block content %}
-<div class="mb-4">
-    <h1 class="display-6"><i class="fas fa-tasks"></i> Manage Certificate Requests</h1>
-    <p class="text-muted">Review and process certificate requests from requesters</p>
+<div class="page-header">
+    <div class="page-header-inner">
+        <span class="header-icon" aria-hidden="true"><i class="fas fa-clipboard-list"></i></span>
+        <h1>Manage Certificate Requests</h1>
+    </div>
+    <p class="sub">Review and process certificate requests from requesters</p>
 </div>
 
 {% if requests %}
-<div class="card">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>Requester</th>
-                        <th>Certificate Type</th>
-                        <th>Recipient</th>
-                        <th>Status</th>
-                        <th>Date Requested</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for request in requests %}
-                    <tr>
-                        <td>{{ request.requester.get_full_name }}</td>
-                        <td>{{ request.template.template_name }}</td>
-                        <td>{{ request.recipient_name }}</td>
-                        <td>
-                            <span class="badge 
-                                {% if request.status == 'pending' %}bg-warning text-dark
-                                {% elif request.status == 'approved' %}bg-info
-                                {% elif request.status == 'completed' %}bg-success
-                                {% else %}bg-danger{% endif %}">
-                                {{ request.get_status_display }}
-                            </span>
-                        </td>
-                        <td>{{ request.created_date|date:"M d, Y H:i" }}</td>
-                        <td>
-                            {% if request.status == 'pending' %}
-                            <div class="btn-group" role="group">
-                                <form method="post" action="{% url 'certificates:approve_request' request.id %}" class="d-inline">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Approve this request and generate certificate?')">
-                                        <i class="fas fa-check"></i> Approve
-                                    </button>
-                                </form>
-                                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal{{ request.id }}">
-                                    <i class="fas fa-times"></i> Reject
-                                </button>
-                            </div>
-                            {% elif request.status == 'completed' and request.generated_certificate %}
-                            <a href="{% url 'certificates:preview' request.generated_certificate.id %}" class="btn btn-sm btn-primary">
-                                <i class="fas fa-eye"></i> View Certificate
-                            </a>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
+<div class="requests-card">
+    <table class="requests-table">
+        <thead>
+            <tr>
+                <th>Requester</th>
+                <th>Certificate Type</th>
+                <th>Recipient</th>
+                <th>Status</th>
+                <th>Date Requested</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for request in requests %}
+            <tr>
+                <td data-label="Requester">
+                    <span class="td-primary">{{ request.requester.get_full_name|default:request.requester.username }}</span>
+                    {% if request.requester.get_full_name %}
+                    <div class="td-meta">{{ request.requester.username }}</div>
+                    {% endif %}
+                </td>
 
-<!-- Reject Modals -->
+                <td data-label="Certificate Type">
+                    {{ request.template.template_name }}
+                </td>
+
+                <td data-label="Recipient">
+                    {{ request.recipient_name }}
+                </td>
+
+                <td data-label="Status">
+                    <span class="status-badge
+                        {% if request.status == 'pending' %}badge-pending
+                        {% elif request.status == 'approved' %}badge-approved
+                        {% elif request.status == 'completed' %}badge-completed
+                        {% else %}badge-rejected{% endif %}">
+                        {{ request.get_status_display }}
+                    </span>
+                </td>
+
+                <td data-label="Date Requested" class="td-date">
+                    {{ request.created_date|date:"M d, Y H:i" }}
+                </td>
+
+                <td data-label="Actions">
+                    {% if request.status == 'pending' %}
+                    <div class="action-group">
+                        <a href="{% url 'certificates:preview_request_staff' request.id %}"
+                           class="btn-action btn-preview">
+                            <i class="fas fa-eye"></i> Preview
+                        </a>
+                        <form method="post" action="{% url 'certificates:approve_request' request.id %}"
+                              class="d-inline m-0 p-0">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-action btn-approve"
+                                    onclick="return confirm('Approve this request and generate the certificate?')">
+                                <i class="fas fa-check"></i> Approve
+                            </button>
+                        </form>
+                        <button type="button" class="btn-action btn-reject"
+                                data-bs-toggle="modal"
+                                data-bs-target="#rejectModal{{ request.id }}">
+                            <i class="fas fa-times"></i> Reject
+                        </button>
+                    </div>
+
+                    {% elif request.status == 'completed' and request.generated_certificate %}
+                    <a href="{% url 'certificates:preview' request.generated_certificate.id %}"
+                       class="btn-action btn-view-cert">
+                        <i class="fas fa-eye"></i> View Certificate
+                    </a>
+
+                    {% elif request.status == 'rejected' %}
+                    <span class="rejected-label">
+                        <i class="fas fa-ban"></i> Rejected
+                    </span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div><!-- /.requests-card -->
+
+
+{# ── Reject Modals ─────────────────────────────────────────── #}
 {% for request in requests %}
 {% if request.status == 'pending' %}
-<div class="modal fade" id="rejectModal{{ request.id }}" tabindex="-1">
-    <div class="modal-dialog">
+<div class="modal fade" id="rejectModal{{ request.id }}" tabindex="-1"
+     aria-labelledby="rejectLabel{{ request.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Reject Request</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <span class="modal-reject-icon" aria-hidden="true"><i class="fas fa-times"></i></span>
+                <h5 class="modal-title" id="rejectLabel{{ request.id }}">Reject Request</h5>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form method="post" action="{% url 'certificates:reject_request' request.id %}">
                 {% csrf_token %}
                 <div class="modal-body">
-                    <p>Are you sure you want to reject this certificate request?</p>
-                    <div class="mb-3">
-                        <label for="rejection_reason{{ request.id }}" class="form-label">Rejection Reason (Optional)</label>
-                        <textarea class="form-control" id="rejection_reason{{ request.id }}" name="rejection_reason" rows="3" placeholder="Provide a reason for rejection..."></textarea>
-                    </div>
+                    <p>Are you sure you want to reject this certificate request? This action cannot be undone.</p>
+                    <label class="form-label-sm" for="rejection_reason{{ request.id }}">
+                        Rejection reason <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span>
+                    </label>
+                    <textarea class="form-control"
+                              id="rejection_reason{{ request.id }}"
+                              name="rejection_reason"
+                              rows="3"
+                              placeholder="Provide a reason for rejection…"></textarea>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">Reject Request</button>
+                    <button type="button" class="btn-action btn-cancel" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-action btn-confirm-reject">
+                        <i class="fas fa-times"></i> Reject Request
+                    </button>
                 </div>
             </form>
         </div>
@@ -97,10 +488,31 @@
 {% endfor %}
 
 {% else %}
-<div class="text-center py-5">
-    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-    <h4>No requests</h4>
-    <p class="text-muted">There are no certificate requests to manage.</p>
+{# ── Empty state ───────────────────────────────────────────── #}
+<div class="requests-card">
+    <div class="empty-state">
+        <i class="fas fa-inbox d-block"></i>
+        <h4>No requests yet</h4>
+        <p>There are no certificate requests to manage at this time.</p>
+    </div>
 </div>
 {% endif %}
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    /* Auto-dismiss Bootstrap alerts after 5 s */
+    var alerts = document.querySelectorAll('.alert');
+    if (alerts.length) {
+        setTimeout(function () {
+            alerts.forEach(function (el) {
+                var a = bootstrap.Alert.getOrCreateInstance(el);
+                a.close();
+            });
+        }, 5000);
+    }
+});
+</script>
 {% endblock %}

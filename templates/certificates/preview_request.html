@@ -1,0 +1,393 @@
+{% extends "base.html" %}
+
+{% block title %}Preview Certificate Request - DBD{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Copy ALL the CSS from your preview_certificate.html here */
+    /* (the same styling with logos, headers, watermarks, etc.) */
+    
+    .preview-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .certificate-doc {
+        font-family: 'Times New Roman', Times, serif;
+        background-color: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        position: relative;
+        width: 100%;
+        max-width: 900px;
+        margin: 20px auto;
+        box-sizing: border-box;
+    }
+    
+    .certificate-doc .doc-content {
+        position: relative;
+        z-index: 1;
+        line-height: 1.75;
+        font-size: 14px;
+        text-align: justify;
+        padding: 40px;
+        box-sizing: border-box;
+    }
+    
+    .certificate-watermark {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        opacity: 0.08;
+        width: 40%;
+        max-width: 320px;
+        min-width: 150px;
+        pointer-events: none;
+        z-index: 0;
+    }
+    
+    /* Header Logo Container */
+    .certificate-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        gap: 15px;
+        flex-wrap: nowrap;
+    }
+    
+    .certificate-header .logo-left,
+    .certificate-header .logo-right {
+        flex-shrink: 0;
+    }
+    
+    .certificate-header .logo-left img,
+    .certificate-header .logo-right img {
+        width: 100px;
+        height: auto;
+        display: block;
+    }
+    
+    .certificate-header .header-text {
+        flex: 1;
+        text-align: center;
+        min-width: 0;
+    }
+    
+    .certificate-header .header-text .republic-text {
+        font-size: 14px;
+        font-weight: normal;
+        text-transform: uppercase;
+        margin: 0;
+    }
+    
+    .certificate-header .header-text .province-text {
+        font-size: 13px;
+        margin-top: 3px;
+    }
+    
+    .certificate-header .header-text .municipality-text {
+        font-size: 13px;
+        margin-top: 2px;
+    }
+    
+    .certificate-header .header-text .barangay-text {
+        font-size: 16px;
+        font-weight: bold;
+        margin-top: 5px;
+        text-transform: uppercase;
+    }
+    
+    .certificate-header .header-text .separator {
+        text-align: center;
+        margin: 5px 0;
+        font-size: 14px;
+    }
+    
+    .certificate-header .header-text .office-text {
+        text-align: center;
+        font-size: 14px;
+        font-weight: bold;
+        margin-top: 5px;
+    }
+    
+    .certificate-doc .doc-title {
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        margin: 20px 0;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+    
+    .certificate-content {
+        font-family: 'Times New Roman', Times, serif;
+        text-align: justify;
+    }
+    
+    .certificate-content p {
+        margin-bottom: 1rem;
+    }
+    
+    .signature-section {
+        margin-top: 50px;
+        text-align: right;
+    }
+    
+    .certificate-footer {
+        margin-top: 40px;
+        font-size: 0.8rem;
+        color: #999;
+        text-align: center;
+    }
+    
+    /* Action buttons spacing */
+    .action-card {
+        margin-bottom: 20px;
+    }
+    
+    .summary-card {
+        margin-top: 0;
+    }
+    
+    .action-buttons-container {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .action-btn {
+        width: 100%;
+        padding: 10px 15px;
+        font-size: 1rem;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        text-align: center;
+    }
+    
+    .action-btn i {
+        margin-right: 8px;
+    }
+    
+    .btn-confirm {
+        background-color: #28a745;
+        color: white;
+        border: none;
+    }
+    
+    .btn-confirm:hover {
+        background-color: #218838;
+        transform: translateY(-1px);
+    }
+    
+    .btn-edit {
+        background-color: #6c757d;
+        color: white;
+        border: none;
+    }
+    
+    .btn-edit:hover {
+        background-color: #5a6268;
+        transform: translateY(-1px);
+    }
+    
+    .btn-cancel {
+        background-color: #f8f9fa;
+        color: #6c757d;
+        border: 1px solid #dee2e6;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+    }
+    
+    .btn-cancel:hover {
+        background-color: #e2e6ea;
+        color: #5a6268;
+        text-decoration: none;
+    }
+    
+    /* Divider for visual separation */
+    .action-divider {
+        height: 1px;
+        background: #e0e0e0;
+        margin: 5px 0;
+    }
+    
+    /* Summary Card Styling */
+    .summary-card .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #006666;
+    }
+    
+    .summary-card .card-body {
+        padding: 15px;
+    }
+    
+    .summary-card p {
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .summary-card p:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+    
+    .summary-card strong {
+        color: #006666;
+        display: inline-block;
+        min-width: 80px;
+    }
+    
+    /* Responsive styles */
+    @media (max-width: 768px) {
+        .certificate-doc .doc-content {
+            padding: 20px;
+        }
+        .certificate-header {
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        .certificate-header .logo-left img,
+        .certificate-header .logo-right img {
+            width: 60px;
+        }
+        .action-btn {
+            padding: 12px 15px;
+            font-size: 1rem;
+        }
+        .action-buttons-container {
+            gap: 10px;
+        }
+        .action-card {
+            margin-bottom: 15px;
+        }
+        .summary-card strong {
+            min-width: 100px;
+        }
+    }
+    
+    @media (min-width: 769px) {
+        .summary-card {
+            margin-top: 0;
+        }
+    }
+    
+    @media print {
+        .navbar, .footer, .action-card, .summary-card, .btn {
+            display: none !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+            <h1 class="display-6"><i class="fas fa-eye"></i> Preview {{ certificate.template.template_name }}</h1>
+            <p class="text-muted">Review your certificate request before confirming it.</p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-9">
+        <div class="card mb-4">
+            <div class="card-body p-0 preview-wrapper">
+                <div class="certificate-doc">
+                    <img src="/media/logos/logobrgy3.png" class="certificate-watermark" alt="Watermark">
+                    <div class="doc-content">
+                        <!-- Header with logos -->
+                        <div class="certificate-header">
+                            <div class="logo-left">
+                                <img src="/media/logos/logobrgy.png" alt="Barangay Logo Left">
+                            </div>
+                            <div class="header-text">
+                                <div class="republic-text">Republic of the Philippines</div>
+                                <div class="province-text">Province of Negros Oriental</div>
+                                <div class="municipality-text">Municipality of Basay</div>
+                                <div class="barangay-text">BARANGAY MAGLINAO</div>
+                                <div class="separator">-o0o-</div>
+                                <div class="office-text">OFFICE OF THE PUNONG BARANGAY</div>
+                            </div>
+                            <div class="logo-right">
+                                <img src="/media/logos/logobrgy2.png" alt="Barangay Logo Right">
+                            </div>
+                        </div>
+
+                        <div class="doc-title">
+                            {{ certificate.template.template_name }}
+                        </div>
+
+                        <!-- Certificate content -->
+                        <div class="certificate-content">
+                            {{ rendered_content|safe }}
+                        </div>
+
+                        <!-- Signature (if available) -->
+                        <div class="signature-section">
+                            <strong>ELMER D. ETOC</strong><br>
+                            <span>Punong Barangay</span>
+                        </div>
+
+                        <div class="certificate-footer">
+                            <i class="fas fa-calendar-alt me-1"></i> Preview generated on {% now "F d, Y H:i" %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3">
+        <!-- Actions Card - Separate Card -->
+        <div class="card action-card">
+            <div class="card-header">
+                <i class="fas fa-tools"></i> Actions
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    {% for key, value in posted_data.items %}
+                        <input type="hidden" name="{{ key }}" value="{{ value }}" />
+                    {% endfor %}
+                    
+                    <div class="action-buttons-container">
+                        <button type="submit" name="confirm" value="1" class="action-btn btn-confirm">
+                            <i class="fas fa-check"></i> Confirm Request
+                        </button>
+                        
+                        <button type="submit" name="edit" value="1" class="action-btn btn-edit">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        
+                        <div class="action-divider"></div>
+                        
+                        <a href="{% url 'certificates:request_types' %}" class="action-btn btn-cancel">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Summary Card - Separate Card with gap from Actions -->
+        <div class="card summary-card">
+            <div class="card-header">
+                <i class="fas fa-info-circle"></i> Request Summary
+            </div>
+            <div class="card-body">
+                <p><strong>Recipient:</strong> {{ form.recipient_name.value }}</p>
+                <p><strong>Email:</strong> {{ form.recipient_email.value }}</p>
+                <p><strong>Contact:</strong> {{ form.recipient_contact.value }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Certificates - DBD{% endblock %}
+
+{% block content %}
+<style>
+    .home-hamburger {
+        border: 1px solid rgba(13,110,253,.5);
+        background: rgba(13,110,253,.08);
+        color: #0d6efd;
+    }
+
+    .overview-buttons-wrapper {
+        overflow: hidden;
+        transition: max-height 0.35s ease, opacity 0.35s ease;
+        max-height: 0;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .overview-buttons-wrapper.open {
+        max-height: 200vh;
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .overview-button {
+        transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .overview-button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 1rem 1.5rem rgba(0, 0, 0, 0.08);
+        background-color: #f8f9fa;
+    }
+
+    .animate-box {
+        opacity: 0;
+        transform: translateY(24px);
+        transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .animate-box.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .certificate-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 1rem 1.5rem rgba(0, 0, 0, 0.08);
+    }
+
+    .home-section-title {
+        margin-bottom: 1rem;
+    }
+
+    .menu-panel {
+        background: #ffffff;
+        border: 1px solid rgba(0,0,0,.08);
+        border-radius: .5rem;
+        box-shadow: 0 0.75rem 1.25rem rgba(0,0,0,.08);
+    }
+</style>
+
+<div class="container py-5">
+    <div class="row mb-4 align-items-center">
+        <div class="col-12 col-md-8">
+            <h1 class="display-5">Available Certificates</h1>
+            <p class="lead">Browse the certificates that are currently available through the system.</p>
+        </div>
+        <div class="col-12 col-md-4 text-md-end mt-3 mt-md-0">
+            <button id="homeMenuToggle" class="btn btn-outline-primary home-hamburger" type="button" aria-expanded="false" aria-controls="homeButtonMenu">
+                <i class="fas fa-bars me-2"></i> Menu
+            </button>
+        </div>
+    </div>
+
+    <div id="homeButtonMenu" class="overview-buttons-wrapper mb-5 menu-panel">
+        <div class="row g-3 p-3">
+            {% for button in buttons %}
+            <div class="col-12 col-sm-6 col-lg-4">
+                <a href="{{ button.url }}" class="overview-button d-flex h-100 align-items-center justify-content-between p-3 rounded shadow-sm text-decoration-none text-dark">
+                    <div>
+                        <h5 class="mb-1">{{ button.label }}</h5>
+                        <p class="mb-0 text-muted">{{ button.description }}</p>
+                    </div>
+                    <i class="fas fa-chevron-right text-primary"></i>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="row g-4">
+        {% if certificates %}
+            {% for certificate in certificates %}
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card certificate-card animate-box h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ certificate.template_name }}</h5>
+                        <p class="card-text text-muted">{{ certificate.description|default:'No description available.' }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="alert alert-info">No certificates are currently available.</div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const menuToggle = document.getElementById('homeMenuToggle');
+        const menuWrapper = document.getElementById('homeButtonMenu');
+
+        menuToggle.addEventListener('click', function () {
+            menuWrapper.classList.toggle('open');
+            const expanded = menuWrapper.classList.contains('open') ? 'true' : 'false';
+            menuToggle.setAttribute('aria-expanded', expanded);
+        });
+
+        const boxes = document.querySelectorAll('.animate-box');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.2,
+        });
+
+        boxes.forEach((box) => observer.observe(box));
+    });
+</script>
+{% endblock %}

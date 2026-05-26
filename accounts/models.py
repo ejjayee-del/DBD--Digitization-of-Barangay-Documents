@@ -1,8 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.utils import timezone
 
 class CustomUser(AbstractUser):
-    """Extended User model with role-based access control"""
+    """Extended User model with role-based access control and registration tracking"""
     ROLE_CHOICES = (
         ('requester', 'Requester - Request Certificates'),
         ('secretary', 'Secretary - View & Print'),
@@ -10,7 +11,25 @@ class CustomUser(AbstractUser):
         ('admin', 'Admin - Full Access (View, Print, Edit, Delete)'),
     )
     
+    STATUS_CHOICES = (
+        ('pending', 'Pending Approval'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    )
+    
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='secretary')
+    
+    # Registration tracking
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='approved')
+    registration_date = models.DateTimeField(auto_now_add=True)
+    rejection_reason = models.TextField(blank=True)
+    
+    # Additional registration fields
+    address = models.TextField(blank=True)
+    birthday = models.DateField(blank=True, null=True)
+    contact_number = models.CharField(max_length=20, blank=True)
+    
+    # Permissions
     can_view_history = models.BooleanField(default=True)
     can_print_certificates = models.BooleanField(default=True)
     can_edit_records = models.BooleanField(default=False)
@@ -58,6 +77,63 @@ class CustomUser(AbstractUser):
             'delete_records': self.can_delete_records,
         }
         return perms.get(permission, False)
+
+
+class BarangayResident(models.Model):
+    """Barangay residents database for automatic registration approval"""
+    full_name = models.CharField(max_length=300)
+    address = models.TextField()
+    date_added = models.DateTimeField(auto_now_add=True)
+    date_updated = models.DateTimeField(auto_now=True)
+    added_by = models.ForeignKey(
+        CustomUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='residents_added'
+    )
+    
+    class Meta:
+        ordering = ['full_name']
+        verbose_name = 'Barangay Resident'
+        verbose_name_plural = 'Barangay Residents'
+    
+    def __str__(self):
+        return f"{self.full_name} - {self.address[:50]}"
+    
+    @staticmethod
+    def match_resident(full_name, address):
+        """Find matching resident in database (case-insensitive, partial match)"""
+        full_name_lower = full_name.lower().strip()
+        address_lower = address.lower().strip()
+        
+        residents = BarangayResident.objects.all()
+        for resident in residents:
+            resident_name_lower = resident.full_name.lower().strip()
+            resident_address_lower = resident.address.lower().strip()
+            
+            # Check for name match and address overlap
+            if full_name_lower in resident_name_lower or resident_name_lower in full_name_lower:
+                if address_lower in resident_address_lower or resident_address_lower in address_lower:
+                    return resident
+        
+        return None
+
+
+class OfficialSignature(models.Model):
+    """Barangay official signatures for certificates"""
+    name = models.CharField(max_length=150)
+    position = models.CharField(max_length=150)
+    signature_image = models.ImageField(upload_to='signatures/')
+    is_active = models.BooleanField(default=True)
+    date_created = models.DateTimeField(auto_now_add=True)
+    date_updated = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-is_active', 'name']
+    
+    def __str__(self):
+        return f"{self.name} - {self.position}"
 
 
 class OfficialSignature(models.Model):

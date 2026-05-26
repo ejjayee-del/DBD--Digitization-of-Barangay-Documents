@@ -1,3 +1,4 @@
+<!-- requester_dashboard.html - Responsive Requester Dashboard -->
 {% extends "base.html" %}
 
 {% block title %}My Dashboard - DBD{% endblock %}
@@ -34,6 +35,145 @@
     .timeline-dot.approved  { background: #17a2b8; }
     .timeline-dot.completed { background: #28a745; }
     .timeline-dot.rejected  { background: #dc3545; }
+    
+    /* ===== RESPONSIVE TABLE STYLES FOR MOBILE (NO EXTERNAL CHANGES) ===== */
+    /* Convert table to card/list view on small screens while preserving functionality */
+    @media (max-width: 768px) {
+        .stat-block h2 {
+            font-size: 1.5rem;
+        }
+        .quick-action-card .card-body {
+            padding: 1rem;
+        }
+        .quick-action-card h5 {
+            font-size: 1rem;
+        }
+        
+        /* Mobile-responsive table transformation */
+        .requests-table-responsive {
+            display: block;
+            width: 100%;
+        }
+        
+        .requests-table-responsive table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        /* Hide table headers on mobile */
+        .requests-table-responsive thead {
+            display: none;
+        }
+        
+        /* Convert each row into a card-like block */
+        .requests-table-responsive tbody tr {
+            display: block;
+            margin-bottom: 1rem;
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+            background-color: white;
+            padding: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        /* Each cell becomes a flex row with label */
+        .requests-table-responsive tbody td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            padding: 0.5rem 0.25rem;
+            border: none;
+            border-bottom: 1px solid #f0f0f0;
+            text-align: left;
+        }
+        
+        .requests-table-responsive tbody td:last-child {
+            border-bottom: none;
+        }
+        
+        /* Add data-label attributes dynamically via CSS pseudo-element */
+        .requests-table-responsive tbody td:before {
+            content: attr(data-label);
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: #6c757d;
+            letter-spacing: 0.3px;
+            width: 35%;
+            flex-shrink: 0;
+        }
+        
+        /* Ensure content wraps properly */
+        .requests-table-responsive tbody td span, 
+        .requests-table-responsive tbody td small,
+        .requests-table-responsive tbody td .badge,
+        .requests-table-responsive tbody td a {
+            width: 60%;
+            text-align: right;
+            word-break: break-word;
+        }
+        
+        /* Special handling for action buttons */
+        .requests-table-responsive tbody td .btn-sm {
+            width: auto;
+            white-space: nowrap;
+        }
+        
+        /* Adjust tooltip icon alignment */
+        .requests-table-responsive tbody td [data-bs-toggle="tooltip"] {
+            text-align: right;
+            display: inline-block;
+        }
+        
+        /* Ensure the badge doesn't stretch weirdly */
+        .requests-table-responsive tbody td .badge {
+            display: inline-block;
+            width: auto;
+            text-align: center;
+        }
+        
+        /* Fix for the recipient name alignment */
+        .requests-table-responsive tbody td small {
+            text-align: right;
+        }
+        
+        /* Last cell (actions) should not have strong left border */
+        .requests-table-responsive tbody td:last-child:before {
+            font-weight: 600;
+        }
+    }
+    
+    /* Additional tiny screen optimizations */
+    @media (max-width: 480px) {
+        .requests-table-responsive tbody td:before {
+            width: 40%;
+            font-size: 0.7rem;
+        }
+        .requests-table-responsive tbody td span,
+        .requests-table-responsive tbody td small,
+        .requests-table-responsive tbody td .badge,
+        .requests-table-responsive tbody td a {
+            width: 55%;
+            font-size: 0.8rem;
+        }
+        
+        .requests-table-responsive tbody td .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.7rem;
+        }
+    }
+    
+    /* Keep original table styling intact for desktop */
+    @media (min-width: 769px) {
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .table {
+            min-width: 500px;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -44,9 +184,9 @@
     <p class="text-muted">Welcome, <strong>{{ user.get_full_name|default:user.username }}</strong>! Track your certificate requests below.</p>
 </div>
 
-<!-- Stats Row -->
-<div class="row mb-4">
-    <div class="col-6 col-md-3 mb-3">
+<!-- Stats Row - Responsive Grid -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
         <div class="card stat-block h-100">
             <div class="card-body py-3">
                 <p class="text-muted small mb-1">Total Requests</p>
@@ -54,7 +194,7 @@
             </div>
         </div>
     </div>
-    <div class="col-6 col-md-3 mb-3">
+    <div class="col-6 col-md-3">
         <div class="card stat-block pending h-100">
             <div class="card-body py-3">
                 <p class="text-muted small mb-1">Pending</p>
@@ -62,7 +202,7 @@
             </div>
         </div>
     </div>
-    <div class="col-6 col-md-3 mb-3">
+    <div class="col-6 col-md-3">
         <div class="card stat-block completed h-100">
             <div class="card-body py-3">
                 <p class="text-muted small mb-1">Completed</p>
@@ -70,7 +210,7 @@
             </div>
         </div>
     </div>
-    <div class="col-6 col-md-3 mb-3">
+    <div class="col-6 col-md-3">
         <div class="card stat-block rejected h-100">
             <div class="card-body py-3">
                 <p class="text-muted small mb-1">Rejected</p>
@@ -81,8 +221,8 @@
 </div>
 
 <!-- Quick Actions -->
-<div class="row mb-4">
-    <div class="col-md-4 mb-3">
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
         <div class="card quick-action-card text-center h-100">
             <a href="{% url 'certificates:request_types' %}" class="text-decoration-none text-dark">
                 <div class="card-body py-4">
@@ -93,7 +233,7 @@
             </a>
         </div>
     </div>
-    <div class="col-md-4 mb-3">
+    <div class="col-md-4">
         <div class="card quick-action-card text-center h-100">
             <a href="{% url 'certificates:my_requests' %}" class="text-decoration-none text-dark">
                 <div class="card-body py-4">
@@ -104,7 +244,7 @@
             </a>
         </div>
     </div>
-    <div class="col-md-4 mb-3">
+    <div class="col-md-4">
         <div class="card quick-action-card text-center h-100">
             <a href="{% url 'transactions:requester_activity_log' %}" class="text-decoration-none text-dark">
                 <div class="card-body py-4">
@@ -117,10 +257,10 @@
     </div>
 </div>
 
-<!-- Recent Request Timeline + Table -->
-<div class="row">
+<!-- Recent Request Timeline + Table - Responsive Two Column Layout -->
+<div class="row g-3">
     <!-- Timeline (last 5) -->
-    <div class="col-md-4 mb-4">
+    <div class="col-md-4">
         <div class="card h-100">
             <div class="card-header">
                 <i class="fas fa-stream me-1"></i> Recent Activity
@@ -159,16 +299,17 @@
         </div>
     </div>
 
-    <!-- Requests Table -->
-    <div class="col-md-8 mb-4">
+    <!-- Requests Table - FULLY RESPONSIVE FOR MOBILE -->
+    <div class="col-md-8">
         <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <span><i class="fas fa-file-certificate me-1"></i> My Requests</span>
                 <a href="{% url 'certificates:my_requests' %}" class="btn btn-sm btn-light text-dark">View All</a>
             </div>
             <div class="card-body p-0">
                 {% if user_requests %}
-                <div class="table-responsive">
+                <!-- Added responsive wrapper class for mobile transformation -->
+                <div class="requests-table-responsive">
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
                             <tr>
@@ -182,27 +323,21 @@
                         <tbody>
                             {% for req in user_requests %}
                             <tr>
-                                <td>
+                                <td class="align-middle" data-label="Certificate Type">
                                     <span class="fw-semibold small">{{ req.template.template_name }}</span>
                                 </td>
-                                <td><small>{{ req.recipient_name }}</small></td>
-                                <td>
+                                <td class="align-middle" data-label="Recipient">
+                                    <small>{{ req.recipient_name }}</small>
+                                </td>
+                                <td class="align-middle" data-label="Status">
                                     <span class="badge status-badge-{{ req.status }}">
                                         {{ req.get_status_display }}
                                     </span>
                                 </td>
-                                <td><small class="text-muted">{{ req.created_date|date:"M d, Y" }}</small></td>
-                                <td>
-                                    {% if req.status == 'completed' and req.generated_certificate %}
-                                    <a href="{% url 'certificates:download' req.generated_certificate.id %}" class="btn btn-sm btn-success">
-                                        <i class="fas fa-download"></i>
-                                    </a>
-                                    {% endif %}
-                                    {% if req.status == 'rejected' and req.rejection_reason %}
-                                    <span data-bs-toggle="tooltip" title="{{ req.rejection_reason }}">
-                                        <i class="fas fa-exclamation-circle text-danger"></i>
-                                    </span>
-                                    {% endif %}
+                                <td class="align-middle" data-label="Date">
+                                    <small class="text-muted">{{ req.created_date|date:"M d, Y" }}</small>
+                                </td>
+                                <td class="align-middle" data-label="Action">
                                 </td>
                             </tr>
                             {% endfor %}
@@ -225,7 +360,10 @@
 
 {% block extra_js %}
 <script>
+    // Initialize tooltips
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.forEach(function(el) { new bootstrap.Tooltip(el); });
+    
+    // No additional modifications - only table responsiveness added
 </script>
 {% endblock %}

@@ -1,4 +1,5 @@
 from django import forms
+from django.utils import timezone
 from .models import CertificateDocument, CertificateTemplate, GeneratedCertificate
 
 
@@ -33,7 +34,82 @@ class DynamicCertificateForm(forms.Form):
             is_required = field_config.get('required', False)
             help_text = field_config.get('help_text', '')
             placeholder = field_config.get('placeholder', '')
-            
+
+            # Normalize field name for common special-cases
+            normalized_name = field_name.lower().replace(' ', '_').replace('-', '_')
+
+            # Handle income/amount/salary fields as number-only
+            if 'income' in normalized_name or 'salary' in normalized_name or 'amount' in normalized_name or 'wage' in normalized_name or 'earnings' in normalized_name:
+                self.fields[field_name] = forms.DecimalField(
+                    label=field_label,
+                    required=is_required,
+                    help_text=help_text,
+                    widget=forms.NumberInput(attrs={
+                        'class': 'form-control',
+                        'placeholder': placeholder or field_label,
+                        'step': '0.01',
+                        'min': '0'
+                    })
+                )
+                continue
+
+            if normalized_name in ('civil_status', 'sex', 'gender'):
+                if normalized_name == 'civil_status':
+                    choices = [('', '-- Select --'), ('Single', 'Single'), ('Married', 'Married'), ('Widowed', 'Widowed'), ('Divorced', 'Divorced'), ('Separated', 'Separated')]
+                else:
+                    choices = [('', '-- Select --'), ('Female', 'Female'), ('Male', 'Male')]
+
+                self.fields[field_name] = forms.ChoiceField(
+                    label=field_label,
+                    required=is_required,
+                    choices=choices,
+                    help_text=help_text,
+                    widget=forms.Select(attrs={'class': 'form-control'})
+                )
+                continue
+
+            if normalized_name == 'day':
+                self.fields[field_name] = forms.CharField(
+                    label=field_label,
+                    required=is_required,
+                    initial=timezone.now().strftime('%d'),
+                    help_text=help_text,
+                    widget=forms.TextInput(attrs={
+                        'class': 'form-control',
+                        'placeholder': placeholder or field_label,
+                        'readonly': 'readonly'
+                    })
+                )
+                continue
+
+            if normalized_name == 'month':
+                self.fields[field_name] = forms.CharField(
+                    label=field_label,
+                    required=is_required,
+                    initial=timezone.now().strftime('%B'),
+                    help_text=help_text,
+                    widget=forms.TextInput(attrs={
+                        'class': 'form-control',
+                        'placeholder': placeholder or field_label,
+                        'readonly': 'readonly'
+                    })
+                )
+                continue
+
+            if normalized_name == 'year':
+                self.fields[field_name] = forms.CharField(
+                    label=field_label,
+                    required=is_required,
+                    initial=timezone.now().strftime('%Y'),
+                    help_text=help_text,
+                    widget=forms.TextInput(attrs={
+                        'class': 'form-control',
+                        'placeholder': placeholder or field_label,
+                        'readonly': 'readonly'
+                    })
+                )
+                continue
+
             if field_type == 'text':
                 self.fields[field_name] = forms.CharField(
                     label=field_label,
@@ -56,15 +132,20 @@ class DynamicCertificateForm(forms.Form):
                     })
                 )
             elif field_type == 'date':
-                self.fields[field_name] = forms.DateField(
-                    label=field_label,
-                    required=is_required,
-                    help_text=help_text,
-                    widget=forms.DateInput(attrs={
+                field_kwargs = {
+                    'label': field_label,
+                    'required': is_required,
+                    'help_text': help_text,
+                    'widget': forms.DateInput(attrs={
                         'class': 'form-control',
                         'type': 'date'
                     })
-                )
+                }
+                if normalized_name == 'date':
+                    field_kwargs['initial'] = timezone.now().date()
+                    field_kwargs['widget'].attrs['readonly'] = 'readonly'
+
+                self.fields[field_name] = forms.DateField(**field_kwargs)
             elif field_type == 'email':
                 self.fields[field_name] = forms.EmailField(
                     label=field_label,

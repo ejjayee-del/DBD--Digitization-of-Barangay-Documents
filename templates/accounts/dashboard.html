@@ -1,6 +1,154 @@
+<!-- dashboard.html - Responsive Admin Dashboard -->
 {% extends "base.html" %}
 
 {% block title %}Dashboard - DBD{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ===== RESPONSIVE TABLE STYLES FOR MOBILE ===== */
+    @media (max-width: 768px) {
+        /* Convert table to card/list view on mobile */
+        .activities-table-responsive {
+            display: block;
+            width: 100%;
+        }
+        
+        .activities-table-responsive table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        /* Hide table headers on mobile */
+        .activities-table-responsive thead {
+            display: none;
+        }
+        
+        /* Convert each row into a card-like block */
+        .activities-table-responsive tbody tr {
+            display: block;
+            margin-bottom: 1rem;
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+            background-color: white;
+            padding: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        /* Each cell becomes a flex row with label */
+        .activities-table-responsive tbody td {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            padding: 0.6rem 0.25rem;
+            border: none;
+            border-bottom: 1px solid #f0f0f0;
+            text-align: left;
+        }
+        
+        .activities-table-responsive tbody td:last-child {
+            border-bottom: none;
+        }
+        
+        /* Add data-label dynamically via pseudo-element */
+        .activities-table-responsive tbody td:before {
+            content: attr(data-label);
+            font-weight: 600;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: #6c757d;
+            letter-spacing: 0.3px;
+            width: 35%;
+            flex-shrink: 0;
+        }
+        
+        /* Ensure content wraps properly */
+        .activities-table-responsive tbody td strong,
+        .activities-table-responsive tbody td .badge,
+        .activities-table-responsive tbody td small {
+            width: 60%;
+            text-align: right;
+            word-break: break-word;
+        }
+        
+        /* Ensure badge displays correctly */
+        .activities-table-responsive tbody td .badge {
+            display: inline-block;
+            width: auto;
+            text-align: center;
+            white-space: normal;
+            word-break: keep-all;
+        }
+        
+        /* Description cell needs proper alignment for longer text */
+        .activities-table-responsive tbody td[data-label="Description"] {
+            align-items: flex-start;
+        }
+        
+        .activities-table-responsive tbody td[data-label="Description"] span {
+            text-align: right;
+            line-height: 1.4;
+        }
+        
+        /* Time cell */
+        .activities-table-responsive tbody td[data-label="Time"] small {
+            text-align: right;
+        }
+    }
+    
+    /* Additional tiny screen optimizations */
+    @media (max-width: 480px) {
+        .activities-table-responsive tbody td:before {
+            width: 40%;
+            font-size: 0.65rem;
+        }
+        .activities-table-responsive tbody td strong,
+        .activities-table-responsive tbody td .badge,
+        .activities-table-responsive tbody td small {
+            width: 55%;
+            font-size: 0.75rem;
+        }
+        .activities-table-responsive tbody td .badge {
+            font-size: 0.7rem;
+            padding: 0.25rem 0.5rem;
+        }
+    }
+    
+    /* Keep original table styling intact for desktop */
+    @media (min-width: 769px) {
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+    }
+    
+    /* Touch-friendly improvements for mobile */
+    @media (max-width: 768px) {
+        .activities-table-responsive tbody tr {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .activities-table-responsive tbody tr:active {
+            background-color: #f8f9fa;
+            transform: scale(0.99);
+        }
+    }
+    
+    /* Quick action buttons responsive improvements */
+    @media (max-width: 576px) {
+        .btn-outline-primary.w-100.py-3 {
+            padding: 0.75rem 0.5rem;
+        }
+        .btn-outline-primary.w-100.py-3 div:first-child i {
+            font-size: 1.4rem !important;
+        }
+        .btn-outline-primary.w-100.py-3 div:last-child {
+            font-size: 0.85rem;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="mb-4">
@@ -8,14 +156,14 @@
     <p class="text-muted">Welcome back, {{ user.get_full_name|default:user.username }}!</p>
 </div>
 
-<!-- Stats Cards -->
-<div class="row mb-4">
-    <div class="col-md-4 mb-3">
-        <div class="card">
+<!-- Stats Cards - Fully Responsive Grid -->
+<div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-md-4">
+        <div class="card h-100">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <p class="text-muted mb-0">Total Certificates</p>
+                        <p class="text-muted mb-0 small">Total Certificates</p>
                         <h3 class="mb-0">{{ total_certificates }}</h3>
                     </div>
                     <div style="font-size: 2rem; color: var(--secondary-color);">
@@ -26,12 +174,12 @@
         </div>
     </div>
     
-    <div class="col-md-4 mb-3">
-        <div class="card">
+    <div class="col-12 col-sm-6 col-md-4">
+        <div class="card h-100">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <p class="text-muted mb-0">Total Requests (Visits)</p>
+                        <p class="text-muted mb-0 small">Total Requests (Visits)</p>
                         <h3 class="mb-0">{{ total_visits }}</h3>
                     </div>
                     <div style="font-size: 2rem; color: var(--secondary-color);">
@@ -42,12 +190,12 @@
         </div>
     </div>
     
-    <div class="col-md-4 mb-3">
-        <div class="card">
+    <div class="col-12 col-sm-6 col-md-4">
+        <div class="card h-100">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <p class="text-muted mb-0">Pending Requests</p>
+                        <p class="text-muted mb-0 small">Pending Requests</p>
                         <h3 class="mb-0 text-warning">{{ pending_requests }}</h3>
                     </div>
                     <div style="font-size: 2rem; color: #ffc107;">
@@ -59,7 +207,7 @@
     </div>
 </div>
 
-<!-- Quick Actions -->
+<!-- Quick Actions - Responsive Grid -->
 <div class="row mb-4">
     <div class="col-12">
         <div class="card">
@@ -67,9 +215,9 @@
                 <i class="fas fa-bolt"></i> Quick Actions
             </div>
             <div class="card-body">
-                <div class="row">
+                <div class="row g-3">
                     {% if user.can_print_certificates %}
-                    <div class="col-md-6 col-lg-3 mb-3">
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
                         <a href="{% url 'certificates:types' %}" class="btn btn-outline-primary w-100 py-3">
                             <div class="mb-2"><i class="fas fa-file-contract" style="font-size: 1.8rem;"></i></div>
                             <div>Generate Certificate</div>
@@ -77,8 +225,18 @@
                     </div>
                     {% endif %}
                     
+                    <!-- Manage Requests - NEW -->
+                    {% if user.can_print_certificates %}
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                        <a href="{% url 'certificates:manage_requests' %}" class="btn btn-outline-primary w-100 py-3">
+                            <div class="mb-2"><i class="fas fa-tasks" style="font-size: 1.8rem;"></i></div>
+                            <div>Manage Requests</div>
+                        </a>
+                    </div>
+                    {% endif %}
+                    
                     {% if user.can_view_history %}
-                    <div class="col-md-6 col-lg-3 mb-3">
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
                         <a href="{% url 'transactions:history' %}" class="btn btn-outline-primary w-100 py-3">
                             <div class="mb-2"><i class="fas fa-history" style="font-size: 1.8rem;"></i></div>
                             <div>View History</div>
@@ -86,15 +244,34 @@
                     </div>
                     {% endif %}
                     
-                    <div class="col-md-6 col-lg-3 mb-3">
+                    {% if user.role == 'admin' or user.role == 'secretary' or user.role == 'officer' or user.is_superuser %}
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                        <a href="{% url 'accounts:manage_registrations' %}" class="btn btn-outline-primary w-100 py-3">
+                            <div class="mb-2"><i class="fas fa-user-check" style="font-size: 1.8rem;"></i></div>
+                            <div>Manage Registrations</div>
+                        </a>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Registration Logs - NEW -->
+                    {% if user.role == 'admin' or user.role == 'secretary' or user.role == 'officer' or user.is_superuser %}
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                        <a href="{% url 'accounts:registration_logs' %}" class="btn btn-outline-primary w-100 py-3">
+                            <div class="mb-2"><i class="fas fa-list-alt" style="font-size: 1.8rem;"></i></div>
+                            <div>Registration Logs</div>
+                        </a>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
                         <a href="{% url 'transactions:activity_log' %}" class="btn btn-outline-primary w-100 py-3">
-                            <div class="mb-2"><i class="fas fa-log" style="font-size: 1.8rem;"></i></div>
+                            <div class="mb-2"><i class="fas fa-clipboard-list" style="font-size: 1.8rem;"></i></div>
                             <div>Activity Log</div>
                         </a>
                     </div>
                     
                     {% if user.is_superuser %}
-                    <div class="col-md-6 col-lg-3 mb-3">
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
                         <a href="{% url 'admin:index' %}" class="btn btn-outline-primary w-100 py-3">
                             <div class="mb-2"><i class="fas fa-cog" style="font-size: 1.8rem;"></i></div>
                             <div>Admin Panel</div>
@@ -107,16 +284,17 @@
     </div>
 </div>
 
-<!-- Recent Activities -->
+<!-- Recent Activities Table - Responsive with card transformation on mobile -->
 <div class="row">
     <div class="col-12">
         <div class="card">
             <div class="card-header">
                 <i class="fas fa-calendar-check"></i> Recent Activities
             </div>
-            <div class="card-body">
+            <div class="card-body p-0">
                 {% if recent_activities %}
-                <div class="table-responsive">
+                <!-- Added responsive wrapper class for mobile transformation -->
+                <div class="activities-table-responsive">
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
                             <tr>
@@ -129,19 +307,27 @@
                         <tbody>
                             {% for activity in recent_activities %}
                             <tr>
-                                <td><strong>{{ activity.user.username }}</strong></td>
-                                <td>
-                                    <span class="badge badge-primary">{{ activity.get_log_type_display }}</span>
+                                <td data-label="User" class="align-middle">
+                                    <strong>{{ activity.user.username }}</strong>
                                 </td>
-                                <td>{{ activity.action_description|truncatewords:10 }}</td>
-                                <td><small class="text-muted">{{ activity.timestamp|date:"M d, Y H:i" }}</small></td>
+                                <td data-label="Activity" class="align-middle">
+                                    <span class="badge bg-secondary">{{ activity.get_log_type_display }}</span>
+                                </td>
+                                <td data-label="Description" class="align-middle">
+                                    <span>{{ activity.action_description|truncatewords:10 }}</span>
+                                </td>
+                                <td data-label="Time" class="align-middle">
+                                    <small class="text-muted">{{ activity.timestamp|date:"M d, Y H:i" }}</small>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
                 {% else %}
-                <p class="text-muted mb-0">No recent activities</p>
+                <div class="text-center py-4">
+                    <p class="text-muted mb-0">No recent activities</p>
+                </div>
                 {% endif %}
             </div>
         </div>

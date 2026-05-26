@@ -2,70 +2,618 @@
 
 {% block title %}Preview Certificate - DBD{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Responsive Certificate Styles */
+    .preview-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .certificate-doc {
+        font-family: 'Times New Roman', Times, serif;
+        background-color: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        position: relative;
+        width: 100%;
+        max-width: 900px;
+        margin: 20px auto;
+        box-sizing: border-box;
+    }
+    
+    .certificate-doc .doc-content {
+        position: relative;
+        z-index: 1;
+        line-height: 1.75;
+        font-size: 14px;
+        text-align: justify;
+        padding: 40px;
+        box-sizing: border-box;
+    }
+    
+    .certificate-watermark {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        opacity: 0.08;
+        width: 40%;
+        max-width: 320px;
+        min-width: 150px;
+        pointer-events: none;
+        z-index: 0;
+    }
+    
+    /* Header Logo Container */
+    .certificate-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        gap: 15px;
+        flex-wrap: nowrap;
+    }
+    
+    .certificate-header .logo-left,
+    .certificate-header .logo-right {
+        flex-shrink: 0;
+    }
+    
+    .certificate-header .logo-left img,
+    .certificate-header .logo-right img {
+        width: 100px;
+        height: auto;
+        display: block;
+    }
+    
+    .certificate-header .header-text {
+        flex: 1;
+        text-align: center;
+        min-width: 0;
+    }
+    
+    .certificate-header .header-text .republic-text {
+        font-size: 14px;
+        font-weight: normal;
+        text-transform: uppercase;
+        margin: 0;
+    }
+    
+    .certificate-header .header-text .province-text {
+        font-size: 13px;
+        margin-top: 3px;
+    }
+    
+    .certificate-header .header-text .municipality-text {
+        font-size: 13px;
+        margin-top: 2px;
+    }
+    
+    .certificate-header .header-text .barangay-text {
+        font-size: 16px;
+        font-weight: bold;
+        margin-top: 5px;
+        text-transform: uppercase;
+    }
+    
+    .certificate-header .header-text .separator {
+        text-align: center;
+        margin: 5px 0;
+        font-size: 14px;
+    }
+    
+    .certificate-header .header-text .office-text {
+        text-align: center;
+        font-size: 14px;
+        font-weight: bold;
+        margin-top: 5px;
+    }
+    
+    .certificate-doc .doc-title {
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        margin: 20px 0;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+    
+    /* Certificate Content */
+    .certificate-content {
+        font-family: 'Times New Roman', Times, serif;
+        text-align: justify;
+    }
+    
+    .certificate-content p {
+        margin-bottom: 1rem;
+    }
+    
+    /* Signature Section */
+    .signature-section {
+        margin-top: 50px;
+        text-align: right;
+    }
+    
+    .signature-section .signature-image {
+        display: block;
+        margin-left: auto;
+        max-width: 220px;
+        max-height: 120px;
+        width: auto;
+        height: auto;
+    }
+    
+    .signature-section .signature-name {
+        font-weight: bold;
+        display: block;
+    }
+    
+    .signature-section .signature-position {
+        display: block;
+    }
+    
+    /* Footer */
+    .certificate-footer {
+        margin-top: 40px;
+        font-size: 0.8rem;
+        color: #999;
+        text-align: center;
+    }
+    
+    /* ===== MODERN ACTION SIDEBAR STYLES ===== */
+    .action-sidebar-card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+        transition: box-shadow 0.3s ease;
+    }
+    
+    .action-sidebar-card:hover {
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    }
+    
+    .action-sidebar-header {
+        background: linear-gradient(135deg, #1e3a5f 0%, #2c4f6e 100%);
+        border: none;
+        padding: 1rem 1.25rem;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+    }
+    
+    .action-sidebar-header i {
+        font-size: 1.1rem;
+    }
+    
+    .action-sidebar-body {
+        padding: 1.25rem;
+        background: #ffffff;
+    }
+    
+    /* Professional Button Styles */
+    .action-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.625rem;
+        padding: 0.625rem 1rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+        border: 1px solid transparent;
+        width: 100%;
+        text-decoration: none;
+    }
+    
+    .action-btn i {
+        font-size: 1rem;
+        transition: transform 0.2s ease;
+    }
+    
+    .action-btn:hover i {
+        transform: translateX(2px);
+    }
+    
+    .action-btn:active {
+        transform: translateY(1px);
+    }
+    
+    /* Primary Action - Print (Deep Navy - stands out) */
+    .btn-primary-action {
+        background: #1e3a5f;
+        color: white;
+        border-color: #1e3a5f;
+        margin-bottom: 0.5rem;
+    }
+    
+    .btn-primary-action:hover {
+        background: #152e4d;
+        border-color: #152e4d;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(30, 58, 95, 0.3);
+    }
+    
+    /* Secondary Actions - Edit & Download (Muted Slate) */
+    .btn-secondary-action {
+        background: #f8f9fc;
+        color: #4a5568;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .btn-secondary-action:hover {
+        background: #edf2f7;
+        border-color: #cbd5e0;
+        transform: translateY(-1px);
+    }
+    
+    /* Success Action - Release (Muted Green) */
+    .btn-success-action {
+        background: #3f7d58;
+        color: white;
+        border-color: #3f7d58;
+    }
+    
+    .btn-success-action:hover {
+        background: #356a4a;
+        border-color: #356a4a;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(63, 125, 88, 0.25);
+    }
+    
+    /* Disabled Button */
+    .btn-disabled-action {
+        background: #f1f5f9;
+        color: #94a3b8;
+        border: 1px solid #e2e8f0;
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+    
+    .btn-disabled-action:hover {
+        transform: none;
+    }
+    
+    /* Navigation Action - Back (Outline style) */
+    .btn-nav-action {
+        background: transparent;
+        color: #64748b;
+        border: 1px solid #e2e8f0;
+        margin-top: 0.5rem;
+    }
+    
+    .btn-nav-action:hover {
+        background: #f8fafc;
+        border-color: #cbd5e0;
+        color: #475569;
+    }
+    
+    /* Button divider for visual separation */
+    .action-divider {
+        height: 1px;
+        background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
+        margin: 0.75rem 0;
+    }
+    
+    /* Responsive adjustments for action sidebar */
+    @media (max-width: 768px) {
+        .action-sidebar-body {
+            padding: 1rem;
+        }
+        
+        .action-btn {
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+        }
+        
+        .sticky-top {
+            position: relative;
+            top: 0;
+            margin-bottom: 20px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .action-sidebar-body {
+            padding: 0.875rem;
+        }
+        
+        .action-btn {
+            padding: 0.625rem 0.875rem;
+            font-size: 0.8125rem;
+        }
+        
+        .action-btn i {
+            font-size: 0.875rem;
+        }
+    }
+    
+    /* Status Badge Styling */
+    .status-badge {
+        padding: 0.5rem 1rem;
+        font-weight: 500;
+        border-radius: 20px;
+        font-size: 0.75rem;
+    }
+    
+    /* ===== END MODERN ACTION SIDEBAR STYLES ===== */
+    
+    /* Tablet Styles */
+    @media (max-width: 992px) {
+        .certificate-doc .doc-content {
+            padding: 30px;
+        }
+        
+        .certificate-header .logo-left img,
+        .certificate-header .logo-right img {
+            width: 80px;
+        }
+        
+        .certificate-header .header-text .republic-text {
+            font-size: 12px;
+        }
+        
+        .certificate-header .header-text .province-text,
+        .certificate-header .header-text .municipality-text {
+            font-size: 11px;
+        }
+        
+        .certificate-header .header-text .barangay-text {
+            font-size: 14px;
+        }
+        
+        .certificate-header .header-text .separator,
+        .certificate-header .header-text .office-text {
+            font-size: 12px;
+        }
+        
+        .certificate-doc .doc-title {
+            font-size: 20px;
+            margin: 15px 0;
+        }
+        
+        .signature-section .signature-image {
+            max-width: 180px;
+            max-height: 100px;
+        }
+    }
+    
+    /* Mobile Styles */
+    @media (max-width: 768px) {
+        .certificate-doc .doc-content {
+            padding: 20px;
+        }
+        
+        /* Stack header vertically on mobile */
+        .certificate-header {
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .certificate-header .logo-left img,
+        .certificate-header .logo-right img {
+            width: 60px;
+        }
+        
+        .certificate-header .header-text {
+            order: 2;
+            width: 100%;
+        }
+        
+        .certificate-header .logo-left {
+            order: 1;
+        }
+        
+        .certificate-header .logo-right {
+            order: 3;
+        }
+        
+        .certificate-header .header-text .republic-text {
+            font-size: 11px;
+        }
+        
+        .certificate-header .header-text .province-text,
+        .certificate-header .header-text .municipality-text {
+            font-size: 10px;
+        }
+        
+        .certificate-header .header-text .barangay-text {
+            font-size: 13px;
+        }
+        
+        .certificate-header .header-text .separator,
+        .certificate-header .header-text .office-text {
+            font-size: 11px;
+        }
+        
+        .certificate-doc .doc-title {
+            font-size: 16px;
+            margin: 12px 0;
+        }
+        
+        .certificate-doc .doc-content {
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        
+        .certificate-content {
+            font-size: 12px;
+        }
+        
+        /* Signature section adjustments */
+        .signature-section {
+            margin-top: 30px;
+            text-align: center;
+        }
+        
+        .signature-section .signature-image {
+            margin-left: auto;
+            margin-right: auto;
+            max-width: 150px;
+            max-height: 80px;
+        }
+        
+        .signature-section .signature-name,
+        .signature-section .signature-position {
+            display: inline-block;
+        }
+        
+        .certificate-footer {
+            margin-top: 25px;
+            font-size: 0.7rem;
+        }
+        
+        /* Watermark adjustment */
+        .certificate-watermark {
+            width: 35%;
+            max-width: 200px;
+            min-width: 120px;
+        }
+    }
+    
+    /* Small Mobile Styles */
+    @media (max-width: 480px) {
+        .certificate-doc .doc-content {
+            padding: 15px;
+        }
+        
+        .certificate-header .logo-left img,
+        .certificate-header .logo-right img {
+            width: 45px;
+        }
+        
+        .certificate-header .header-text .republic-text {
+            font-size: 9px;
+        }
+        
+        .certificate-header .header-text .province-text,
+        .certificate-header .header-text .municipality-text {
+            font-size: 8px;
+        }
+        
+        .certificate-header .header-text .barangay-text {
+            font-size: 11px;
+        }
+        
+        .certificate-header .header-text .separator,
+        .certificate-header .header-text .office-text {
+            font-size: 9px;
+        }
+        
+        .certificate-doc .doc-title {
+            font-size: 13px;
+            margin: 10px 0;
+        }
+        
+        .certificate-doc .doc-content {
+            font-size: 10px;
+            line-height: 1.5;
+        }
+        
+        .certificate-content {
+            font-size: 10px;
+        }
+        
+        .signature-section {
+            margin-top: 20px;
+        }
+        
+        .signature-section .signature-image {
+            max-width: 120px;
+            max-height: 60px;
+        }
+        
+        .signature-section .signature-name,
+        .signature-section .signature-position {
+            font-size: 10px;
+        }
+        
+        .certificate-footer {
+            margin-top: 20px;
+            font-size: 0.6rem;
+        }
+        
+        .certificate-watermark {
+            width: 40%;
+            max-width: 150px;
+            min-width: 80px;
+        }
+    }
+    
+    /* Print Styles */
+    @media print {
+        .navbar,
+        .footer,
+        .col-lg-3 .card,
+        .badge,
+        .btn,
+        .action-sidebar-card {
+            display: none !important;
+        }
+        
+        .col-lg-9 {
+            width: 100% !important;
+            max-width: 100% !important;
+            flex: 0 0 100% !important;
+        }
+        
+        .certificate-doc {
+            box-shadow: none;
+            border: 1px solid #ccc;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .certificate-doc .doc-content {
+            padding: 20px;
+        }
+        
+        .certificate-watermark {
+            opacity: 0.05;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="mb-4">
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
         <h1 class="display-6"><i class="fas fa-eye"></i> Certificate Preview</h1>
-        <span class="badge bg-{% if certificate.status == 'printed' %}success{% elif certificate.status == 'generated' %}info{% else %}secondary{% endif %}">
+        <span class="badge bg-{% if certificate.status == 'printed' %}success{% elif certificate.status == 'generated' %}info{% else %}secondary{% endif %} status-badge">
+            <i class="fas 
+                {% if certificate.status == 'printed' %}fa-check-circle
+                {% elif certificate.status == 'generated' %}fa-clock
+                {% else %}fa-question-circle{% endif %} me-1"></i>
             {{ certificate.get_status_display }}
         </span>
     </div>
 </div>
 
 <div class="row">
-    <div class="col-lg-8">
-        <style>
-            .certificate-doc {
-                font-family: 'Times New Roman', Times, serif;
-                background-color: white;
-                border: 1px solid #e0e0e0;
-                padding: 40px;
-                position: relative;
-                overflow: hidden;
-            }
-            .certificate-watermark {
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                opacity: 0.08;
-                width: 320px;
-                pointer-events: none;
-                z-index: 0;
-            }
-            .certificate-doc .doc-content {
-                position: relative;
-                z-index: 1;
-                line-height: 1.75;
-                font-size: 14px;
-                text-align: justify;
-            }
-            .certificate-doc .doc-title {
-                text-align: center;
-                font-size: 22px;
-                font-weight: bold;
-                margin: 20px 0;
-                text-transform: uppercase;
-                letter-spacing: 0.08em;
-            }
-        </style>
+    <div class="col-lg-9">
         <div class="card mb-4">
-            <div class="card-body p-0">
+            <div class="card-body p-0 preview-wrapper">
                 <div class="certificate-doc">
                     <img src="/media/logos/logobrgy3.png" class="certificate-watermark" alt="Watermark">
                     <div class="doc-content">
-                        <!-- Header with logos -->
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
-                            <img src="/media/logos/logobrgy.png" style="width: 120px; height: auto;" alt="Barangay Logo Left">
-                            <div style="flex: 1; text-align: center;">
-                                <div style="font-size: 14px; font-weight: normal; text-transform: uppercase;">Republic of the Philippines</div>
-                                <div style="font-size: 13px; margin-top: 3px;">Province of Negros Oriental</div>
-                                <div style="font-size: 13px; margin-top: 2px;">Municipality of Basay</div>
-                                <div style="font-size: 16px; font-weight: bold; margin-top: 5px; text-transform: uppercase;">BARANGAY MAGLINAO</div>
-                                <div style="text-align: center; margin: 5px 0; font-size: 14px;">-o0o-</div>
-                                <div style="text-align: center; font-size: 14px; font-weight: bold; margin-top: 5px;">OFFICE OF THE PUNONG BARANGAY</div>
+                        <!-- Header with logos - Responsive layout -->
+                        <div class="certificate-header">
+                            <div class="logo-left">
+                                <img src="/media/logos/logobrgy.png" alt="Barangay Logo Left">
                             </div>
-                            <img src="/media/logos/logobrgy2.png" style="width: 120px; height: auto;" alt="Barangay Logo Right">
+                            <div class="header-text">
+                                <div class="republic-text">Republic of the Philippines</div>
+                                <div class="province-text">Province of Negros Oriental</div>
+                                <div class="municipality-text">Municipality of Basay</div>
+                                <div class="barangay-text">BARANGAY MAGLINAO</div>
+                                <div class="separator">-o0o-</div>
+                                <div class="office-text">OFFICE OF THE PUNONG BARANGAY</div>
+                            </div>
+                            <div class="logo-right">
+                                <img src="/media/logos/logobrgy2.png" alt="Barangay Logo Right">
+                            </div>
                         </div>
 
                         <div class="doc-title">
@@ -73,63 +621,77 @@
                         </div>
 
                         <!-- Certificate content -->
-                        <div>
+                        <div class="certificate-content">
                             {{ rendered_content|safe }}
                         </div>
 
                         {% if certificate.signature_official %}
-                        <div style="margin-top: 50px; text-align: right;">
+                        <div class="signature-section">
                             {% if certificate.signature_official.signature_image %}
-                            <img src="{{ certificate.signature_official.signature_image.url }}" style="display: block; margin-left: auto; max-width: 220px; max-height: 120px;" alt="Signature">
+                            <img src="{{ certificate.signature_official.signature_image.url }}" class="signature-image" alt="Signature">
                             {% endif %}
-                            <strong>{{ certificate.signature_official.name }}</strong><br>
-                            {{ certificate.signature_official.position }}
+                            <strong class="signature-name">{{ certificate.signature_official.name }}</strong>
+                            <span class="signature-position">{{ certificate.signature_official.position }}</span>
                         </div>
                         {% endif %}
 
-                        <p style="margin-top: 40px; font-size: 0.9rem; color: #999; text-align: center;">
-                            Generated on {{ certificate.created_date|date:"F d, Y H:i" }}<br>
-                            by {{ certificate.created_by.get_full_name|default:certificate.created_by.username }}
-                        </p>
+                        <div class="certificate-footer">
+                            <i class="fas fa-calendar-alt me-1"></i> Generated on {{ certificate.created_date|date:"F d, Y H:i" }}<br>
+                            <i class="fas fa-user me-1"></i> by {{ certificate.created_by.get_full_name|default:certificate.created_by.username }}
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     
-    <div class="col-lg-12">
-        <div class="card">
-            <div class="card-header">
-                <i class="fas fa-tools"></i> Actions
+    <!-- Modern Professional Action Sidebar -->
+    <div class="col-lg-3">
+        <div class="card action-sidebar-card sticky-top" style="top:20px;">
+            <div class="card-header action-sidebar-header text-white">
+                <i class="fas fa-sliders-h me-2"></i> Quick Actions
             </div>
-           <div class="card-body d-flex flex-column gap-2">
-                <!-- Edit in System button -->
-                <a href="{% url 'certificates:edit_certificate' certificate.id %}" class="btn btn-warning">
-                    <i class="fas fa-edit"></i> Edit in System
+            <div class="card-body action-sidebar-body">
+                <!-- Primary Action: Print -->
+                <a href="{% url 'certificates:print_from_system' certificate.id %}" class="action-btn btn-primary-action" target="_blank">
+                    <i class="fas fa-print"></i>
+                    <span>Print Certificate</span>
                 </a>
                 
-                <!-- Download button -->
-                <a href="{% url 'certificates:download' certificate.id %}" class="btn btn-primary">
-                    <i class="fas fa-file-word"></i> Download Certificate
+                <!-- Secondary Actions -->
+                <a href="{% url 'certificates:edit_certificate' certificate.id %}" class="action-btn btn-secondary-action">
+                    <i class="fas fa-edit"></i>
+                    <span>Edit Certificate</span>
                 </a>
                 
-                <!-- Print button - opens print preview page -->
-                <a href="{% url 'certificates:print_from_system' certificate.id %}" class="btn btn-info" target="_blank">
-                    <i class="fas fa-print"></i> Print Certificate
+                <a href="{% url 'certificates:download' certificate.id %}" class="action-btn btn-secondary-action">
+                    <i class="fas fa-download"></i>
+                    <span>Download Certificate</span>
                 </a>
                 
-                <!-- Mark as Printed button -->
-                {% if certificate.status != 'printed' %}
-                <form method="GET" action="{% url 'certificates:print' certificate.id %}" style="width: 100%;">
-                    <button type="submit" class="btn btn-success w-100">
-                        <i class="fas fa-check-circle"></i> Mark as Printed
+                <!-- Divider for visual separation -->
+                <div class="action-divider"></div>
+                
+                <!-- Success Action: Release (conditional) -->
+                {% if certificate.status == 'generated' or certificate.status == 'printed' %}
+                <form method="POST" action="{% url 'certificates:release' certificate.id %}" style="width: 100%;">
+                    {% csrf_token %}
+                    <button type="submit" class="action-btn btn-success-action">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Release Certificate</span>
                     </button>
                 </form>
+                {% elif certificate.status == 'released' %}
+                <button class="action-btn btn-disabled-action" disabled>
+                    <i class="fas fa-check-double"></i>
+                    <span>Certificate Released</span>
+                </button>
                 {% endif %}
                 
-                <!-- Back button -->
-                <a href="{% url 'certificates:types' %}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Back
+                <!-- Navigation Action: Back -->
+                <a href="{% url 'certificates:types' %}" class="action-btn btn-nav-action">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back to Certificates</span>
                 </a>
             </div>
         </div>

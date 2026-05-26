@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>{% block title %}DBD - Barangay Document Digitization{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -17,50 +17,211 @@
             --danger-color: #dc3545;
             --light-bg: #f8f9fa;
             --dark-text: #212529;
+            --header-safe-top: env(safe-area-inset-top, 0px);
+            --header-safe-right: env(safe-area-inset-right, 0px);
+            --header-safe-left: env(safe-area-inset-left, 0px);
         }
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow-x: hidden;
         }
         
+        .content-wrapper {
+            flex: 1;
+        }
+        
+        /* ========== FIXED HEADER (NO STUPID BEHAVIOR ON MOBILE) ========== */
         .navbar {
             background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+            /* Ensure safe area insets for notched phones */
+            padding-left: max(0.75rem, var(--header-safe-left));
+            padding-right: max(0.75rem, var(--header-safe-right));
         }
         
+        /* Prevent flex wrap in navbar container – keeps button + brand on same line */
+        .navbar .container-fluid {
+            flex-wrap: nowrap;
+            gap: 0.5rem;
+        }
+        
+        /* Offcanvas toggle button - always properly sized and touch-friendly */
+        .navbar .btn-outline-light {
+            flex-shrink: 0;
+            padding: 0.5rem 0.75rem;
+            font-size: 1.2rem;
+            line-height: 1;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+            touch-action: manipulation;
+        }
+        
+        .navbar .btn-outline-light:active {
+            transform: scale(0.96);
+        }
+        
+        /* Brand area: logo + text stays together without shrinking too aggressively */
         .navbar-brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
             font-weight: bold;
-            font-size: 1.5rem;
+            font-size: 1.4rem;
+            flex-shrink: 1;
+            min-width: 0;
+            white-space: nowrap;
         }
         
+        .navbar-brand img {
+            height: 38px;
+            width: 38px;
+            object-fit: contain;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        
+        /* Extra-tiny screens: reduce brand font size and logo size slightly */
+        @media (max-width: 380px) {
+            .navbar-brand {
+                font-size: 1.2rem;
+                gap: 0.35rem;
+            }
+            .navbar-brand img {
+                height: 32px;
+                width: 32px;
+            }
+            .navbar .btn-outline-light {
+                padding: 0.4rem 0.6rem;
+                font-size: 1rem;
+            }
+        }
+        
+        /* Sidebar styling (desktop & offcanvas) */
         .sidebar {
             background-color: var(--primary-color);
             color: white;
             min-height: calc(100vh - 56px);
             padding-top: 20px;
+            display: flex;
+            flex-direction: column;
         }
         
-        .sidebar .nav-link {
-            color: rgba(255,255,255,0.8);
+        .sidebar .nav-link,
+        .offcanvas-sidebar .nav-link {
+            color: rgba(255,255,255,0.85);
             padding: 12px 20px;
             border-left: 3px solid transparent;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+            white-space: normal;
+            word-break: break-word;
         }
         
         .sidebar .nav-link:hover,
-        .sidebar .nav-link.active {
+        .sidebar .nav-link.active,
+        .offcanvas-sidebar .nav-link:hover,
+        .offcanvas-sidebar .nav-link.active {
             color: white;
-            background-color: rgba(0, 170, 255, 0.1);
+            background-color: rgba(0, 170, 255, 0.15);
             border-left-color: var(--accent-color);
         }
         
+        /* User profile in sidebar - prevent overflow on narrow screens */
+        .user-profile-sidebar {
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            margin-bottom: 10px;
+        }
+        
+        .user-profile-sidebar .user-name {
+            font-weight: bold;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+            font-size: 0.95rem;
+        }
+        
+        /* Logout section at bottom */
+        .logout-nav-item {
+            margin-top: auto;
+            border-top: 1px solid rgba(255,255,255,0.2);
+            padding-top: 10px;
+        }
+        
+        .logout-btn-sidebar {
+            background-color: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            width: 100%;
+            text-align: left;
+            padding: 10px 20px;
+            border-radius: 0;
+            transition: background-color 0.2s;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .logout-btn-sidebar:hover {
+            background-color: rgba(255,255,255,0.25);
+        }
+        
+        /* Offcanvas sidebar: mobile-first width, prevents overlapping main UI */
+        .offcanvas-sidebar {
+            background-color: var(--primary-color);
+            color: white;
+            width: 85% !important;
+            max-width: 320px !important;
+            border-right: none;
+        }
+        
+        @media (min-width: 576px) {
+            .offcanvas-sidebar {
+                width: 300px !important;
+                max-width: 300px !important;
+            }
+        }
+        
+        .offcanvas-sidebar .offcanvas-header {
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            padding: 1rem 1.25rem;
+        }
+        
+        .offcanvas-sidebar .btn-close {
+            filter: brightness(0) invert(1);
+            opacity: 0.8;
+        }
+        
+        .offcanvas-sidebar .offcanvas-body {
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            overflow-y: auto;
+        }
+        
+        /* Main content area - responsive spacing */
         .main-content {
-            padding: 20px;
+            padding: 1.5rem;
             background-color: #f5f5f5;
             min-height: calc(100vh - 56px);
         }
         
+        @media (max-width: 576px) {
+            .main-content {
+                padding: 1rem;
+            }
+        }
+        
+        /* Card styling */
         .card {
             border: none;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -83,12 +244,16 @@
             border-color: var(--primary-color);
         }
         
-        .badge-primary {
-            background-color: var(--secondary-color);
+        /* Table responsiveness */
+        .table-responsive-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            max-width: 100%;
         }
         
-        .table-hover tbody tr:hover {
-            background-color: #f0f7ff;
+        .table-responsive-wrapper table {
+            width: 100%;
+            border-collapse: collapse;
         }
         
         .footer {
@@ -96,131 +261,285 @@
             color: white;
             text-align: center;
             padding: 20px;
-            margin-top: 40px;
+            margin-top: auto;
         }
         
-        .message-container {
+        /* Toast messages – safe area aware and touch-friendly */
+        .toast-container {
             position: fixed;
-            top: 70px;
-            right: 20px;
-            z-index: 1050;
-            max-width: 400px;
+            top: max(70px, var(--header-safe-top));
+            right: max(20px, var(--header-safe-right));
+            z-index: 1070;
+            width: auto;
+            max-width: 380px;
+            min-width: 240px;
         }
         
-        .alert {
-            border-radius: 5px;
+        @media (max-width: 576px) {
+            .toast-container {
+                left: max(16px, var(--header-safe-left));
+                right: max(16px, var(--header-safe-right));
+                max-width: none;
+            }
+        }
+        
+        .toast {
+            backdrop-filter: blur(4px);
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        /* Stack columns vertically on small screens (general) */
+        @media (max-width: 768px) {
+            .btn, .nav-link, .dropdown-item {
+                padding: 0.5rem 1rem;
+            }
+            .card-body {
+                padding: 1rem;
+            }
+            .display-5 {
+                font-size: 1.8rem;
+            }
+            .row > [class*='col-'] {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+            .d-flex.flex-row {
+                flex-direction: column !important;
+            }
+            .gap-3, .gap-2, .gap-1 {
+                gap: 0.5rem !important;
+            }
+        }
+        
+        /* Fix offcanvas backdrop + touch scrolling */
+        .offcanvas-backdrop {
+            backdrop-filter: blur(2px);
+        }
+        
+        /* No horizontal overflow from any element */
+        body, .container-fluid, .row, .main-content {
+            overflow-x: hidden;
+        }
+        
+        /* Improve touch target for all sidebar links & buttons */
+        .nav-link, .logout-btn-sidebar {
+            cursor: pointer;
+            touch-action: manipulation;
         }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <!-- Navigation Bar -->
+    <!-- Fixed Navigation Bar – NO WRAPPING, NO OVERFLOW, SAFE AREAS -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="{% url 'dashboard' %}">
-                <i class="fas fa-building"></i> DBD
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
+            <!-- Mobile Offcanvas Toggle Button (touch-friendly & visible) -->
+            {% if user.is_authenticated %}
+            <button class="btn btn-outline-light d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas" aria-label="Open menu">
+                <i class="fas fa-bars"></i>
             </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    {% if user.is_authenticated %}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-user"></i> {{ user.get_full_name|default:user.username }}
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                                <li><a class="dropdown-item" href="#"><i class="fas fa-cog"></i> Settings</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <form method="POST" action="{% url 'accounts:logout' %}" style="display: inline;">
-                                        {% csrf_token %}
-                                        <button class="dropdown-item" type="submit"><i class="fas fa-sign-out-alt"></i> Logout</button>
-                                    </form>
-                                </li>
-                            </ul>
-                        </li>
-                    {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'accounts:login' %}"><i class="fas fa-sign-in-alt"></i> Login</a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </div>
+            {% endif %}
+            
+            <!-- Brand / Logo – stable alignment -->
+            <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'dashboard' %}">
+                <img src="/media/logos/logobrgy2.png" alt="Barangay Maglina Logo" style="height: 40px; width: 40px; object-fit: contain; border-radius: 50%;" onerror="this.onerror=null;this.src='https://via.placeholder.com/40?text=DBD';">
+                <span>DBD</span>
+            </a>
+            
+            <!-- Optional: placeholder for right-side actions (empty but keeps balance) -->
+            <div class="d-none d-md-block ms-auto" style="width: 40px;"></div>
         </div>
     </nav>
 
+    <!-- Offcanvas Sidebar for Mobile – responsive width, smooth closing -->
+    {% if user.is_authenticated %}
+    <div class="offcanvas offcanvas-start offcanvas-sidebar" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title text-white" id="sidebarOffcanvasLabel">
+                <i class="fas fa-user-shield me-2"></i>Menu
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body p-0 d-flex flex-column">
+            <!-- User profile section with truncation -->
+            <div class="user-profile-sidebar">
+                <div class="user-name">
+                    <i class="fas fa-user-circle me-2"></i> {{ user.get_full_name|default:user.username }}
+                </div>
+                <small class="text-white-50 d-block mt-1" style="font-size: 0.75rem;">
+                    <i class="fas fa-badge-check me-1"></i>{{ user.get_role_display|default:user.role }}
+                </small>
+            </div>
+            
+            <!-- Navigation links with active state -->
+            <nav class="nav flex-column">
+                <a class="nav-link{% if request.resolver_match.url_name == 'dashboard' %} active{% endif %}" href="{% url 'dashboard' %}">
+                    <i class="fas fa-home me-2"></i> Dashboard
+                </a>
+                
+                {% if user.can_print_certificates %}
+                <a class="nav-link{% if 'certificates' in request.resolver_match.app_names %} active{% endif %}" href="{% url 'certificates:types' %}">
+                    <i class="fas fa-certificate me-2"></i> Certificates
+                </a>
+                <a class="nav-link{% if 'manage_requests' in request.resolver_match.url_name %} active{% endif %}" href="{% url 'certificates:manage_requests' %}">
+                    <i class="fas fa-tasks me-2"></i> Manage Requests
+                </a>
+                {% endif %}
+                
+                {% if user.role == 'requester' %}
+                <hr class="my-2" style="background-color: rgba(255,255,255,0.2);">
+                <a class="nav-link{% if 'request_types' in request.resolver_match.url_name or 'request_certificate' in request.resolver_match.url_name %} active{% endif %}" href="{% url 'certificates:request_types' %}">
+                    <i class="fas fa-plus-circle me-2"></i> New Request
+                </a>
+                <a class="nav-link{% if 'my_requests' in request.resolver_match.url_name %} active{% endif %}" href="{% url 'certificates:my_requests' %}">
+                    <i class="fas fa-list-alt me-2"></i> My Requests
+                </a>
+                <a class="nav-link{% if 'requester_activity_log' in request.resolver_match.url_name %} active{% endif %}" href="{% url 'transactions:requester_activity_log' %}">
+                    <i class="fas fa-history me-2"></i> Activity Log
+                </a>
+                {% else %}
+                {% if user.can_view_history %}
+                <a class="nav-link{% if 'history' in request.resolver_match.url_name %} active{% endif %}" href="{% url 'transactions:history' %}">
+                    <i class="fas fa-history me-2"></i> Visit History
+                </a>
+                {% endif %}
+                <a class="nav-link{% if 'activity_log' == request.resolver_match.url_name %} active{% endif %}" href="{% url 'transactions:activity_log' %}">
+                    <i class="fas fa-clipboard-list me-2"></i> Activity Log
+                </a>
+
+                {% if user.role == 'admin' or user.role == 'secretary' or user.role == 'officer' %}
+                <a class="nav-link{% if 'manage_registrations' == request.resolver_match.url_name %} active{% endif %}" href="{% url 'accounts:manage_registrations' %}">
+                    <i class="fas fa-user-check me-2"></i> Manage Registrations
+                </a>
+                <a class="nav-link{% if 'registration_logs' == request.resolver_match.url_name %} active{% endif %}" href="{% url 'accounts:registration_logs' %}">
+                    <i class="fas fa-clipboard-check me-2"></i> Registration Logs
+                </a>
+                {% endif %}
+                {% endif %}
+                
+                {% if user.is_superuser %}
+                <hr class="my-2" style="background-color: rgba(255,255,255,0.2);">
+                <a class="nav-link" href="{% url 'admin:index' %}">
+                    <i class="fas fa-lock me-2"></i> Admin Panel
+                </a>
+                {% endif %}
+            </nav>
+            
+            <!-- Logout button – bottom fixed in flex -->
+            <div class="logout-nav-item">
+                <form method="POST" action="{% url 'accounts:logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="logout-btn-sidebar">
+                        <i class="fas fa-sign-out-alt me-2"></i> Logout
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Main Container -->
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Sidebar -->
+    <div class="container-fluid content-wrapper">
+        <div class="row g-0">
+            <!-- Static Sidebar for Desktop (no offcanvas needed) -->
             {% if user.is_authenticated %}
-            <div class="col-md-3 col-lg-2 sidebar">
+            <div class="col-md-3 col-lg-2 sidebar d-none d-md-block">
+                <div class="user-profile-sidebar">
+                    <div class="user-name">
+                        <i class="fas fa-user-circle me-2"></i> {{ user.get_full_name|default:user.username }}
+                    </div>
+                    <small class="text-white-50 d-block mt-1" style="font-size: 0.75rem;">
+                        <i class="fas fa-badge-check me-1"></i>{{ user.get_role_display|default:user.role }}
+                    </small>
+                </div>
+                
                 <nav class="nav flex-column">
                     <a class="nav-link{% if request.resolver_match.url_name == 'dashboard' %} active{% endif %}" href="{% url 'dashboard' %}">
-                        <i class="fas fa-home"></i> Dashboard
+                        <i class="fas fa-home me-2"></i> Dashboard
                     </a>
                     
                     {% if user.can_print_certificates %}
                     <a class="nav-link{% if 'certificates' in request.resolver_match.app_names %} active{% endif %}" href="{% url 'certificates:types' %}">
-                        <i class="fas fa-certificate"></i> Certificates
+                        <i class="fas fa-certificate me-2"></i> Certificates
                     </a>
                     <a class="nav-link{% if 'manage_requests' in request.resolver_match.url_name %} active{% endif %}" href="{% url 'certificates:manage_requests' %}">
-                        <i class="fas fa-tasks"></i> Manage Requests
+                        <i class="fas fa-tasks me-2"></i> Manage Requests
                     </a>
                     {% endif %}
                     
                     {% if user.role == 'requester' %}
-                    <hr style="background-color: rgba(255,255,255,0.2);">
+                    <hr class="my-2" style="background-color: rgba(255,255,255,0.2);">
                     <a class="nav-link{% if 'request_types' in request.resolver_match.url_name or 'request_certificate' in request.resolver_match.url_name %} active{% endif %}" href="{% url 'certificates:request_types' %}">
-                        <i class="fas fa-plus-circle"></i> New Request
+                        <i class="fas fa-plus-circle me-2"></i> New Request
                     </a>
                     <a class="nav-link{% if 'my_requests' in request.resolver_match.url_name %} active{% endif %}" href="{% url 'certificates:my_requests' %}">
-                        <i class="fas fa-list-alt"></i> My Requests
+                        <i class="fas fa-list-alt me-2"></i> My Requests
                     </a>
                     <a class="nav-link{% if 'requester_activity_log' in request.resolver_match.url_name %} active{% endif %}" href="{% url 'transactions:requester_activity_log' %}">
-                        <i class="fas fa-history"></i> Activity Log
+                        <i class="fas fa-history me-2"></i> Activity Log
                     </a>
                     {% else %}
                     {% if user.can_view_history %}
                     <a class="nav-link{% if 'history' in request.resolver_match.url_name %} active{% endif %}" href="{% url 'transactions:history' %}">
-                        <i class="fas fa-history"></i> Visit History
+                        <i class="fas fa-history me-2"></i> Visit History
                     </a>
                     {% endif %}
                     <a class="nav-link{% if 'activity_log' == request.resolver_match.url_name %} active{% endif %}" href="{% url 'transactions:activity_log' %}">
-                        <i class="fas fa-clipboard-list"></i> Activity Log
+                        <i class="fas fa-clipboard-list me-2"></i> Activity Log
                     </a>
+
+                    {% if user.role == 'admin' or user.role == 'secretary' or user.role == 'officer' %}
+                    <a class="nav-link{% if 'manage_registrations' == request.resolver_match.url_name %} active{% endif %}" href="{% url 'accounts:manage_registrations' %}">
+                        <i class="fas fa-user-check me-2"></i> Manage Registrations
+                    </a>
+                    <a class="nav-link{% if 'registration_logs' == request.resolver_match.url_name %} active{% endif %}" href="{% url 'accounts:registration_logs' %}">
+                        <i class="fas fa-clipboard-check me-2"></i> Registration Logs
+                    </a>
+                    {% endif %}
                     {% endif %}
                     
                     {% if user.is_superuser %}
-                    <hr style="background-color: rgba(255,255,255,0.2);">
+                    <hr class="my-2" style="background-color: rgba(255,255,255,0.2);">
                     <a class="nav-link" href="{% url 'admin:index' %}">
-                        <i class="fas fa-lock"></i> Admin Panel
+                        <i class="fas fa-lock me-2"></i> Admin Panel
                     </a>
                     {% endif %}
                 </nav>
+                
+                <div class="logout-nav-item">
+                    <form method="POST" action="{% url 'accounts:logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="logout-btn-sidebar">
+                            <i class="fas fa-sign-out-alt me-2"></i> Logout
+                        </button>
+                    </form>
+                </div>
             </div>
             
-            <!-- Main Content -->
-            <div class="col-md-9 col-lg-10 main-content">
+            <!-- Main Content Area (dynamic width for desktop, full width on mobile) -->
+            <div class="col-12 col-md-9 col-lg-10 main-content">
                 {% else %}
             <div class="col-12 main-content">
                 {% endif %}
                 
-                <!-- Messages -->
+                <!-- Toast Messages (non-intrusive & auto-dismiss) -->
                 {% if messages %}
-                <div class="message-container">
+                <div class="toast-container">
                     {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    <div class="toast align-items-center text-white bg-{{ message.tags }} border-0 shadow-sm mb-2" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="7000">
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                <i class="fas fa-info-circle me-2"></i>{{ message }}
+                            </div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
                     </div>
                     {% endfor %}
                 </div>
                 {% endif %}
 
-                <!-- Page Content -->
+                <!-- Dynamic Page Content -->
                 {% block content %}{% endblock %}
             </div>
         </div>
@@ -228,10 +547,66 @@
 
     <!-- Footer -->
     <footer class="footer">
-        <p>&copy; 2026 DBD - Digitization of Barangay Documents. All rights reserved.</p>
+        <p>&copy; 2026 DBD - Digitization of Barangay Documents. All rights reserved. <br> Developed by Ella Joy Noble Quinilitan</p>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (function() {
+            // Ensure offcanvas closes automatically when nav links are clicked on mobile
+            const offcanvasElement = document.getElementById('sidebarOffcanvas');
+            if (offcanvasElement) {
+                const closeOffcanvas = () => {
+                    const offcanvasInstance = bootstrap.Offcanvas.getInstance(offcanvasElement);
+                    if (offcanvasInstance) {
+                        offcanvasInstance.hide();
+                    }
+                };
+                
+                // attach click event to all nav links inside offcanvas (except logout buttons to avoid form interference)
+                const navLinks = offcanvasElement.querySelectorAll('.nav-link');
+                navLinks.forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        // Do not close if the link has any special behavior that needs immediate navigation? 
+                        // close anyway because navigation will change page. No conflict.
+                        closeOffcanvas();
+                    });
+                });
+                
+                // Ensure backdrop removal after offcanvas fully hides (performance)
+                offcanvasElement.addEventListener('hidden.bs.offcanvas', function () {
+                    document.body.classList.remove('modal-open');
+                    const backdrops = document.querySelectorAll('.offcanvas-backdrop');
+                    backdrops.forEach(backdrop => backdrop.remove());
+                });
+            }
+            
+            // Initialize all toasts and auto-dismiss
+            const toastElements = document.querySelectorAll('.toast');
+            toastElements.forEach(toastEl => {
+                const toast = new bootstrap.Toast(toastEl, {
+                    delay: 7000,
+                    animation: true
+                });
+                toast.show();
+            });
+            
+            // Fix for sticky header on iOS: prevent address bar zoom/scroll glitches
+            const setVhFix = () => {
+                let vh = window.innerHeight * 0.01;
+                document.documentElement.style.setProperty('--vh', `${vh}px`);
+            };
+            window.addEventListener('resize', setVhFix);
+            setVhFix();
+            
+            // Additional touch behavior: improve tap highlights on sidebar
+            if ('ontouchstart' in window) {
+                document.querySelectorAll('.nav-link, .logout-btn-sidebar, .btn').forEach(el => {
+                    el.style.cursor = 'pointer';
+                });
+            }
+        })();
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

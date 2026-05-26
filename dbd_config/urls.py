@@ -19,10 +19,14 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from accounts.views import dashboard_view
+from home import home_view, public_certificates_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', dashboard_view, name='dashboard'),
+    path('', home_view, name='home'),
+    path('home/', home_view, name='home-page'),
+    path('dashboard/', dashboard_view, name='dashboard'),
+    path('certificates/', public_certificates_view, name='public_certificates'),
     path('accounts/', include('accounts.urls')),
     path('certificates/', include('certificates.urls')),
     path('transactions/', include('transactions.urls')),

@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block title %}Registration Logs - Barangay Certificate System{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row mb-4">
+        <div class="col">
+            <h2 style="color: var(--primary-color);">
+                <i class="fas fa-history"></i> Registration Activity Logs
+            </h2>
+        </div>
+    </div>
+
+    {% if messages %}
+        <div class="alert-messages mb-4">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Filter Form -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="form-inline">
+                <div class="input-group mb-2 flex-grow-1 me-2">
+                    <label for="action-filter" class="input-group-text">Filter by Action:</label>
+                    <select name="action" id="action-filter" class="form-select">
+                        <option value="">-- All Actions --</option>
+                        {% for value, label in actions %}
+                            <option value="{{ value }}" {% if action_filter == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button class="btn btn-outline-secondary" type="submit">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+                {% if action_filter %}
+                    <a href="{% url 'accounts:registration_logs' %}" class="btn btn-outline-secondary ms-2">
+                        <i class="fas fa-times"></i> Clear
+                    </a>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <!-- Logs Table -->
+    {% if logs %}
+        <div class="table-responsive card">
+            <table class="table table-hover table-striped mb-0">
+                <thead style="background-color: var(--primary-color); color: white;">
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Action</th>
+                        <th>Actor</th>
+                        <th>Subject User</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                        <tr>
+                            <td>
+                                <small>{{ log.timestamp|date:"M d, Y H:i:s" }}</small>
+                            </td>
+                            <td>
+                                {% if log.action == 'registration_submitted' %}
+                                    <span class="badge" style="background-color: var(--accent-color);">{{ log.get_action_display }}</span>
+                                {% elif log.action == 'auto_approved' %}
+                                    <span class="badge" style="background-color: #28a745;">{{ log.get_action_display }}</span>
+                                {% elif log.action == 'approved' %}
+                                    <span class="badge" style="background-color: #17a2b8;">{{ log.get_action_display }}</span>
+                                {% elif log.action == 'rejected' %}
+                                    <span class="badge" style="background-color: #dc3545;">{{ log.get_action_display }}</span>
+                                {% elif log.action == 'resident_added' %}
+                                    <span class="badge" style="background-color: #6f42c1;">{{ log.get_action_display }}</span>
+                                {% elif log.action == 'resident_updated' %}
+                                    <span class="badge" style="background-color: #fd7e14;">{{ log.get_action_display }}</span>
+                                {% elif log.action == 'resident_deleted' %}
+                                    <span class="badge" style="background-color: #e83e8c;">{{ log.get_action_display }}</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ log.get_action_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if log.actor %}
+                                    <small>
+                                        <strong>{{ log.actor.get_full_name }}</strong>
+                                        <br>
+                                        <span class="text-muted">({{ log.actor.username }})</span>
+                                    </small>
+                                {% else %}
+                                    <small class="text-muted">System</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if log.subject_user %}
+                                    <small>
+                                        {{ log.subject_user.get_full_name }}
+                                        <br>
+                                        <span class="text-muted">({{ log.subject_user.username }})</span>
+                                    </small>
+                                {% else %}
+                                    <small class="text-muted">N/A</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small>{{ log.details }}</small>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <p class="text-muted mt-3">
+            Showing <strong>{{ logs.count }}</strong> log entry/entries
+            {% if action_filter %}
+                for action <strong>"{{ action_filter }}"</strong>
+            {% endif %}
+        </p>
+    {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> No registration logs found.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

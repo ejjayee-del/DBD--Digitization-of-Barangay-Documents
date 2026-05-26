@@ -1,0 +1,412 @@
+{% extends "base.html" %}
+
+{% block title %}Home - System Overview{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --primary-blue: #1e3a5f;
+        --primary-teal: #006666;
+        --accent-mint: #98c1a9;
+        --accent-gold: #d4a373;
+        --light-bg: #f0f4f8;
+    }
+
+    /* Radiant gradient for SYSTEM OVERVIEW with animation */
+    .radiant-title {
+        background: linear-gradient(135deg, #1e3a5f 0%, #006666 25%, #2c8c8c 50%, #006666 75%, #1e3a5f 100%);
+        background-size: 200% auto;
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        animation: shimmer 3s linear infinite;
+        font-weight: 700;
+        letter-spacing: 1px;
+        opacity: 0;
+        transform: translateY(-20px);
+        animation: shimmer 3s linear infinite, slideDown 0.6s ease forwards;
+    }
+
+    /* Description animation */
+    .system-description {
+        font-size: 1.1rem;
+        color: #4a5568;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeInUp 0.6s ease 0.2s forwards;
+    }
+
+    /* Menu button animation */
+    .home-hamburger {
+        border: 1px solid var(--primary-teal);
+        background: rgba(0, 102, 102, 0.1);
+        color: var(--primary-teal);
+        transition: all 0.3s ease;
+        opacity: 0;
+        transform: scale(0.9);
+        animation: fadeInScale 0.5s ease 0.3s forwards;
+    }
+
+    @keyframes shimmer {
+        0% {
+            background-position: 0% 50%;
+        }
+        50% {
+            background-position: 100% 50%;
+        }
+        100% {
+            background-position: 0% 50%;
+        }
+    }
+
+    @keyframes slideDown {
+        0% {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fadeInUp {
+        0% {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fadeInScale {
+        0% {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+        100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    .home-hamburger:hover {
+        background: var(--primary-teal);
+        color: white;
+        transform: translateY(-2px) scale(1.02);
+    }
+
+    .overview-buttons-wrapper {
+        overflow: hidden;
+        transition: max-height 0.35s ease, opacity 0.35s ease;
+        max-height: 0;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .overview-buttons-wrapper.open {
+        max-height: 200vh;
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .overview-button {
+        transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+        border: 1px solid rgba(0, 102, 102, 0.15);
+        background: white;
+        border-radius: 12px;
+        position: relative;
+        overflow: hidden;
+        opacity: 0;
+        transform: translateY(30px);
+        animation: fadeInUp 0.5s ease forwards;
+        animation-delay: calc(0.1s * var(--i, 0));
+    }
+
+    .overview-button::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(0, 102, 102, 0.05), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .overview-button:hover::before {
+        left: 100%;
+    }
+
+    .overview-button:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 1rem 2rem rgba(0, 102, 102, 0.15);
+        border-color: var(--primary-teal);
+    }
+
+    .overview-button h5 {
+        color: var(--primary-blue);
+        font-weight: 600;
+    }
+
+    .animate-box {
+        opacity: 0;
+        transform: translateY(24px);
+        transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .animate-box.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .home-section-title {
+        margin-bottom: 0;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+
+    .menu-panel {
+        background: #ffffff;
+        border: 1px solid rgba(0, 102, 102, 0.15);
+        border-radius: 1rem;
+        box-shadow: 0 0.75rem 1.5rem rgba(0, 102, 102, 0.1);
+    }
+
+    /* Card styling */
+    .card {
+        border: none;
+        border-radius: 1rem;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0, 102, 102, 0.12);
+    }
+
+    .card-header {
+        background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-teal) 100%);
+        border: none;
+        padding: 1rem 1.25rem;
+    }
+
+    .card-header h5, .card-header .home-section-title {
+        color: white;
+        margin: 0;
+        font-weight: 600;
+    }
+
+    /* Secondary card headers */
+    .card-header.bg-secondary {
+        background: linear-gradient(135deg, var(--primary-teal) 0%, #008080 100%) !important;
+    }
+
+    /* List group items */
+    .list-group-item {
+        border-left: none;
+        border-right: none;
+        border-color: rgba(0, 102, 102, 0.1);
+        padding: 0.875rem 1rem;
+        transition: background-color 0.2s ease;
+    }
+
+    .list-group-item:hover {
+        background-color: rgba(0, 102, 102, 0.03);
+    }
+
+    /* Badge styling */
+    .badge.bg-primary {
+        background: linear-gradient(135deg, var(--primary-blue), var(--primary-teal)) !important;
+        padding: 0.5rem 1rem;
+        font-weight: 500;
+    }
+
+    /* Contact section */
+    #contact-us .card-body p {
+        margin-bottom: 0.75rem;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(0, 102, 102, 0.1);
+    }
+
+    #contact-us .card-body p:last-child {
+        border-bottom: none;
+    }
+
+    #contact-us .card-body strong {
+        color: var(--primary-blue);
+        min-width: 80px;
+        display: inline-block;
+    }
+
+    /* Fee amounts */
+    #fees .list-group-item span:last-child {
+        color: var(--primary-teal);
+        font-weight: 600;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .system-description {
+            font-size: 0.95rem;
+        }
+        
+        .display-5 {
+            font-size: 1.75rem;
+        }
+    }
+</style>
+
+<div class="container py-5">
+    <div class="row mb-4 align-items-center">
+        <div class="col-12 col-md-8">
+            <h1 class="display-5 radiant-title">SYSTEM OVERVIEW</h1>
+            <p class="system-description">Welcome to the DBD system overview. This page gives you quick access to certificate offerings, estimated processing times, fee information, and contact details. Use the menu button to open navigation options.</p>
+        </div>
+        <div class="col-12 col-md-4 text-md-end mt-3 mt-md-0">
+            <button id="homeMenuToggle" class="btn home-hamburger" type="button" aria-expanded="false" aria-controls="homeButtonMenu">
+                <i class="fas fa-bars me-2"></i> Menu
+            </button>
+        </div>
+    </div>
+
+    <div id="homeButtonMenu" class="overview-buttons-wrapper mb-5 menu-panel">
+        <div class="row g-3 p-4">
+            {% for button in buttons %}
+            <div class="col-12 col-sm-6 col-lg-4">
+                <a href="{{ button.url }}" class="overview-button d-flex h-100 align-items-center justify-content-between p-3 rounded shadow-sm text-decoration-none" style="--i: {{ forloop.counter0 }}">
+                    <div>
+                        <h5 class="mb-1">{{ button.label }}</h5>
+                        <p class="mb-0 text-muted small">{{ button.description }}</p>
+                    </div>
+                    <i class="fas fa-chevron-right" style="color: var(--primary-teal);"></i>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card mb-4 animate-box">
+                <div class="card-header">
+                    <div class="home-section-title">
+                        <i class="fas fa-certificate me-2"></i> Certificates Available
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        {% for certificate in certificates %}
+                        <li class="list-group-item">
+                            <i class="fas fa-file-alt me-2" style="color: var(--primary-teal);"></i>
+                            {{ certificate }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card mb-4 animate-box" id="processing-time">
+                <div class="card-header bg-secondary">
+                    <div class="home-section-title">
+                        <i class="fas fa-clock me-2"></i> Processing Time
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        {% for item in processing_times %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>
+                                <i class="fas fa-hourglass-half me-2" style="color: var(--primary-teal);"></i>
+                                {{ item.service }}
+                            </span>
+                            <span class="badge bg-primary rounded-pill">{{ item.time }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card mb-4 animate-box" id="fees">
+                <div class="card-header bg-secondary">
+                    <div class="home-section-title">
+                        <i class="fas fa-tag me-2"></i> Fees
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        {% for fee in fees %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>
+                                <i class="fas fa-receipt me-2" style="color: var(--primary-teal);"></i>
+                                {{ fee.item }}
+                            </span>
+                            <span style="color: var(--primary-teal); font-weight: 600;">₱ {{ fee.amount }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card mb-4 animate-box" id="contact-us">
+                <div class="card-header bg-secondary">
+                    <div class="home-section-title">
+                        <i class="fas fa-headset me-2"></i> Contact Us
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p>
+                        <strong><i class="fas fa-envelope me-2" style="color: var(--primary-teal);"></i>Email:</strong>
+                        <span>{{ contact.email }}</span>
+                    </p>
+                    <p>
+                        <strong><i class="fas fa-phone me-2" style="color: var(--primary-teal);"></i>Phone:</strong>
+                        <span>{{ contact.phone }}</span>
+                    </p>
+                    <p>
+                        <strong><i class="fas fa-map-marker-alt me-2" style="color: var(--primary-teal);"></i>Address:</strong>
+                        <span>{{ contact.address }}</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const menuToggle = document.getElementById('homeMenuToggle');
+        const menuWrapper = document.getElementById('homeButtonMenu');
+
+        if (menuToggle && menuWrapper) {
+            menuToggle.addEventListener('click', function () {
+                menuWrapper.classList.toggle('open');
+                const expanded = menuWrapper.classList.contains('open') ? 'true' : 'false';
+                menuToggle.setAttribute('aria-expanded', expanded);
+            });
+        }
+
+        const boxes = document.querySelectorAll('.animate-box, .overview-button');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.2,
+        });
+
+        boxes.forEach((box) => observer.observe(box));
+    });
+</script>
+{% endblock %}

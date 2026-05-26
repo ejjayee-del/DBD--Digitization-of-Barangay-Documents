@@ -3,23 +3,92 @@
 {% block title %}Login - DBD{% endblock %}
 
 {% block content %}
+<style>
+    .overview-buttons-wrapper {
+        overflow: hidden;
+        transition: max-height 0.35s ease, opacity 0.35s ease;
+        max-height: 0;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .overview-buttons-wrapper.open {
+        max-height: 240vh;
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .overview-button {
+        transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .overview-button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 1rem 1.5rem rgba(0, 0, 0, 0.08);
+        background-color: #f8f9fa;
+    }
+
+    .menu-panel {
+        background: #ffffff;
+        border: 1px solid rgba(0,0,0,.08);
+        border-radius: .5rem;
+        box-shadow: 0 0.75rem 1.25rem rgba(0,0,0,.08);
+    }
+</style>
+
 <div class="row justify-content-center" style="min-height: 100vh; display: flex; align-items: center;">
     <div class="col-md-6">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h2 class="h4 mb-0">Welcome Back</h2>
+                <p class="text-muted mb-0">Access your account or register for a requester account.</p>
+            </div>
+            <button id="loginMenuToggle" class="btn btn-outline-primary" type="button" aria-expanded="false" aria-controls="loginMenuPanel">
+                <i class="fas fa-bars me-2"></i> Menu
+            </button>
+        </div>
+
+        <div id="loginMenuPanel" class="overview-buttons-wrapper menu-panel mb-4">
+            <div class="row g-3 p-3">
+                {% for button in buttons %}
+                <div class="col-12 col-md-6">
+                    <a href="{{ button.url }}" class="overview-button d-flex align-items-center justify-content-between p-3 rounded text-decoration-none text-dark">
+                        <div>
+                            <h6 class="mb-1">{{ button.label }}</h6>
+                            <p class="mb-0 text-muted small">{{ button.description }}</p>
+                        </div>
+                        <i class="fas fa-chevron-right text-primary"></i>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
         <div class="card">
             <div class="card-header text-center">
                 <h3><i class="fas fa-sign-in-alt"></i> System Access</h3>
-                <p class="mb-0" style="font-size: 0.9rem;">DBD - Barangay Document Digitization</p>
+                <p class="mb-0" style="font-size: 0.9rem;">DBD - Digitization of Barangay Documents</p>
             </div>
             <div class="card-body p-4">
+
+                {% if messages %}
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}" role="alert">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+
                 {% if form.non_field_errors %}
                 <div class="alert alert-danger" role="alert">
                     {{ form.non_field_errors }}
                 </div>
                 {% endif %}
-                
-                <form method="POST" class="needs-validation">
+
+                <!-- LOGIN FORM -->
+                <form method="POST" class="needs-validation" id="login-form">
                     {% csrf_token %}
-                    
+                    <input type="hidden" name="action" value="login">
+
                     <div class="mb-3">
                         <label for="{{ form.username.id_for_label }}" class="form-label">Username</label>
                         {{ form.username }}
@@ -27,7 +96,7 @@
                         <div class="invalid-feedback d-block">{{ form.username.errors }}</div>
                         {% endif %}
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="{{ form.password.id_for_label }}" class="form-label">Password</label>
                         {{ form.password }}
@@ -35,18 +104,164 @@
                         <div class="invalid-feedback d-block">{{ form.password.errors }}</div>
                         {% endif %}
                     </div>
-                    
+
                     <div class="d-grid gap-2">
                         <button class="btn btn-primary btn-lg" type="submit">
                             <i class="fas fa-sign-in-alt"></i> Sign In
                         </button>
                     </div>
                 </form>
+
+                <hr>
+
+                <!-- REGISTER TOGGLE -->
+                <div class="text-center mb-2">
+                    <small class="text-muted">Don't have an account?</small>
+                    <a href="#" class="small" onclick="toggleRegister(event)">Create a requester account</a>
+                </div>
+
+                
+                <div id="register-section" style="display: none;">
+                    {% if register_form.non_field_errors %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ register_form.non_field_errors }}
+                    </div>
+                    {% endif %}
+
+                    <form method="POST" class="needs-validation" id="register-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="register">
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ register_form.first_name.id_for_label }}" class="form-label">First Name</label>
+                                {{ register_form.first_name }}
+                                {% if register_form.first_name.errors %}
+                                <div class="invalid-feedback d-block">{{ register_form.first_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ register_form.last_name.id_for_label }}" class="form-label">Last Name</label>
+                                {{ register_form.last_name }}
+                                {% if register_form.last_name.errors %}
+                                <div class="invalid-feedback d-block">{{ register_form.last_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ register_form.address.id_for_label }}" class="form-label">Address</label>
+                            {{ register_form.address }}
+                            {% if register_form.address.errors %}
+                            <div class="invalid-feedback d-block">{{ register_form.address.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ register_form.birthday.id_for_label }}" class="form-label">Birthday</label>
+                                {{ register_form.birthday }}
+                                {% if register_form.birthday.errors %}
+                                <div class="invalid-feedback d-block">{{ register_form.birthday.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ register_form.contact_number.id_for_label }}" class="form-label">Contact Number</label>
+                                {{ register_form.contact_number }}
+                                {% if register_form.contact_number.errors %}
+                                <div class="invalid-feedback d-block">{{ register_form.contact_number.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ register_form.username.id_for_label }}" class="form-label">Username</label>
+                            {{ register_form.username }}
+                            {% if register_form.username.errors %}
+                            <div class="invalid-feedback d-block">{{ register_form.username.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ register_form.email.id_for_label }}" class="form-label">
+                                Email <span class="text-muted">(optional)</span>
+                            </label>
+                            {{ register_form.email }}
+                            {% if register_form.email.errors %}
+                            <div class="invalid-feedback d-block">{{ register_form.email.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ register_form.password1.id_for_label }}" class="form-label">Password</label>
+                            {{ register_form.password1 }}
+                            {% if register_form.password1.errors %}
+                            <div class="invalid-feedback d-block">{{ register_form.password1.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ register_form.password2.id_for_label }}" class="form-label">Confirm Password</label>
+                            {{ register_form.password2 }}
+                            {% if register_form.password2.errors %}
+                            <div class="invalid-feedback d-block">{{ register_form.password2.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-success btn-lg" type="submit">
+                                <i class="fas fa-user-plus"></i> Create Account
+                            </button>
+                        </div>
+                    </form>
+
+                    <hr>
+                    
+                    <div class="text-center">
+                        <small class="text-muted">Already have an account? </small>
+                        <a href="#" class="small" onclick="toggleRegister(event)">Back to Login</a>
+                    </div>
+
+                    <small class="text-center d-block text-muted mt-3">
+                        Note: If you're in our barangay resident list, your account will be automatically approved!
+                    </small>
+                </div>
+
             </div>
             <div class="card-footer text-center">
-                <small class="text-muted">Contact your administrator for account access</small>
+                <small class="text-muted">Staff accounts are managed by the barangay administrator.</small>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+function toggleRegister(event) {
+    event.preventDefault();
+    const loginForm = document.getElementById('login-form');
+    const registerSection = document.getElementById('register-section');
+    
+    if (registerSection.style.display === 'none') {
+        loginForm.style.display = 'none';
+        registerSection.style.display = 'block';
+    } else {
+        loginForm.style.display = 'block';
+        registerSection.style.display = 'none';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const menuToggle = document.getElementById('loginMenuToggle');
+    const menuPanel = document.getElementById('loginMenuPanel');
+
+    if (menuToggle && menuPanel) {
+        menuToggle.addEventListener('click', function () {
+            menuPanel.classList.toggle('open');
+            const expanded = menuPanel.classList.contains('open') ? 'true' : 'false';
+            menuToggle.setAttribute('aria-expanded', expanded);
+        });
+    }
+});
+</script>
+
 {% endblock %}

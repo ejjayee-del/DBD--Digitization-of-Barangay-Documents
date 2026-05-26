@@ -20,6 +20,8 @@ urlpatterns = [
     
     # Staff URLs
     path('manage-requests/', views.manage_requests_view, name='manage_requests'),
+    path('preview-request/<int:request_id>/', views.preview_request_staff_view, name='preview_request_staff'),
     path('approve-request/<int:request_id>/', views.approve_request_view, name='approve_request'),
     path('reject-request/<int:request_id>/', views.reject_request_view, name='reject_request'),
+    path('release/<int:certificate_id>/', views.release_certificate_view, name='release'),
 ]

@@ -2,6 +2,180 @@
 
 {% block title %}My Requests - DBD{% endblock %}
 
+{% block extra_css %}
+<style>
+    .rejection-reason {
+        background-color: #fff5f5;
+        border-left: 3px solid #dc3545;
+        border-radius: 4px;
+        padding: 4px 8px;
+        font-size: 0.78rem;
+        color: #842029;
+        margin-top: 4px;
+    }
+
+    .btn-preview-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+    
+    /* Status badge styles matching dashboard */
+    .status-badge-pending   { background-color: #ffc107; color: #212529; }
+    .status-badge-approved  { background-color: #17a2b8; color: #fff; }
+    .status-badge-completed { background-color: #28a745; color: #fff; }
+    .status-badge-rejected  { background-color: #dc3545; color: #fff; }
+
+    /* ===== RESPONSIVE TABLE STYLES FOR MOBILE ===== */
+    @media (max-width: 768px) {
+        /* Convert table to card/list view on mobile */
+        .requests-table-responsive {
+            display: block;
+            width: 100%;
+        }
+        
+        .requests-table-responsive table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        /* Hide table headers on mobile */
+        .requests-table-responsive thead {
+            display: none;
+        }
+        
+        /* Convert each row into a card-like block */
+        .requests-table-responsive tbody tr {
+            display: block;
+            margin-bottom: 1rem;
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+            background-color: white;
+            padding: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        /* Each cell becomes a flex row with label */
+        .requests-table-responsive tbody td {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            padding: 0.6rem 0.25rem;
+            border: none;
+            border-bottom: 1px solid #f0f0f0;
+            text-align: left;
+        }
+        
+        .requests-table-responsive tbody td:last-child {
+            border-bottom: none;
+        }
+        
+        /* Add data-label dynamically via pseudo-element */
+        .requests-table-responsive tbody td:before {
+            content: attr(data-label);
+            font-weight: 600;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: #6c757d;
+            letter-spacing: 0.3px;
+            width: 35%;
+            flex-shrink: 0;
+        }
+        
+        /* Ensure content wraps properly */
+        .requests-table-responsive tbody td span,
+        .requests-table-responsive tbody td .badge,
+        .requests-table-responsive tbody td .rejection-reason,
+        .requests-table-responsive tbody td .btn,
+        .requests-table-responsive tbody td small {
+            width: 60%;
+            text-align: right;
+            word-break: break-word;
+        }
+        
+        /* Special handling for rejection reason block */
+        .requests-table-responsive tbody td .rejection-reason {
+            width: 60%;
+            text-align: left;
+            margin-top: 4px;
+            background-color: #fff5f5;
+            border-left: 3px solid #dc3545;
+            padding: 6px 8px;
+            font-size: 0.72rem;
+        }
+        
+        /* Ensure badge displays correctly */
+        .requests-table-responsive tbody td .badge {
+            display: inline-block;
+            width: auto;
+            text-align: center;
+            white-space: normal;
+            word-break: keep-all;
+        }
+        
+        /* Ensure button displays correctly on mobile */
+        .requests-table-responsive tbody td .btn {
+            display: inline-block;
+            width: auto;
+            text-align: center;
+        }
+        
+        /* Status cell needs special alignment */
+        .requests-table-responsive tbody td[data-label="Status"] {
+            flex-direction: column;
+            align-items: flex-end;
+        }
+        
+        .requests-table-responsive tbody td[data-label="Status"]:before {
+            align-self: flex-start;
+            margin-bottom: 4px;
+        }
+        
+        .requests-table-responsive tbody td[data-label="Status"] span,
+        .requests-table-responsive tbody td[data-label="Status"] div {
+            width: 100%;
+            text-align: right;
+        }
+        
+        .requests-table-responsive tbody td[data-label="Status"] .rejection-reason {
+            text-align: left;
+            margin-top: 6px;
+        }
+    }
+    
+    /* Additional tiny screen optimizations */
+    @media (max-width: 480px) {
+        .requests-table-responsive tbody td:before {
+            width: 40%;
+            font-size: 0.65rem;
+        }
+        .requests-table-responsive tbody td span,
+        .requests-table-responsive tbody td .badge,
+        .requests-table-responsive tbody td .rejection-reason,
+        .requests-table-responsive tbody td .btn,
+        .requests-table-responsive tbody td small {
+            width: 55%;
+            font-size: 0.75rem;
+        }
+        .requests-table-responsive tbody td .rejection-reason {
+            font-size: 0.68rem;
+        }
+        .btn-preview-sm {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.4rem;
+        }
+    }
+    
+    /* Keep original table styling intact for desktop */
+    @media (min-width: 769px) {
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="mb-4 d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
     <div>
@@ -16,7 +190,7 @@
 {% if requests %}
 <div class="card">
     <div class="card-body p-0">
-        <div class="table-responsive">
+        <div class="requests-table-responsive">
             <table class="table table-hover mb-0">
                 <thead class="table-light">
                     <tr>
@@ -30,24 +204,58 @@
                 <tbody>
                     {% for request in requests %}
                     <tr>
-                        <td>{{ request.template.template_name }}</td>
-                        <td>{{ request.recipient_name }}</td>
-                        <td>
-                            <span class="badge 
-                                {% if request.status == 'pending' %}bg-warning text-dark
-                                {% elif request.status == 'approved' %}bg-info
-                                {% elif request.status == 'completed' %}bg-success
-                                {% else %}bg-danger{% endif %}">
+                        <td data-label="Certificate Type">
+                            {{ request.template.template_name }}
+                        </td>
+                        <td data-label="Recipient">
+                            {{ request.recipient_name }}
+                        </td>
+                        <td data-label="Status">
+                            <span class="badge status-badge-{{ request.status }}">
                                 {{ request.get_status_display }}
                             </span>
-                        </td>
-                        <td>{{ request.created_date|date:"M d, Y H:i" }}</td>
-                        <td>
-                            {% if request.status == 'completed' and request.generated_certificate %}
-                            <a href="{% url 'certificates:download' request.generated_certificate.id %}" class="btn btn-sm btn-success">
-                                <i class="fas fa-download"></i> Download
-                            </a>
+                            {% if request.status == 'rejected' and request.rejection_reason %}
+                            <div class="rejection-reason">
+                                <i class="fas fa-exclamation-circle me-1"></i>{{ request.rejection_reason }}
+                            </div>
                             {% endif %}
+                        </td>
+                        <td data-label="Date Requested">
+                            {{ request.created_date|date:"M d, Y H:i" }}
+                        </td>
+                        <td data-label="Actions">
+                            <div class="d-flex gap-1 justify-content-start justify-content-md-end">
+                                {% if request.status == 'completed' and request.generated_certificate %}
+                                    <!-- View/Preview button -->
+                                    <a href="{% url 'certificates:preview' request.generated_certificate.id %}" 
+                                    class="btn btn-sm btn-info btn-preview-sm"
+                                    target="_blank"
+                                    title="View Certificate">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                {% elif request.status == 'approved' %}
+                                    <!-- For approved but not yet completed requests -->
+                                    <button class="btn btn-sm btn-secondary btn-preview-sm" 
+                                            disabled
+                                            title="Certificate is being processed">
+                                        <i class="fas fa-clock"></i> Processing
+                                    </button>
+                                {% elif request.status == 'pending' %}
+                                    <!-- For pending requests -->
+                                    <button class="btn btn-sm btn-secondary btn-preview-sm" 
+                                            disabled
+                                            title="Certificate not yet available">
+                                        <i class="fas fa-hourglass-half"></i> Pending
+                                    </button>
+                                {% elif request.status == 'rejected' %}
+                                    <!-- For rejected requests -->
+                                    <button class="btn btn-sm btn-danger btn-preview-sm" 
+                                            disabled
+                                            title="Request was rejected">
+                                        <i class="fas fa-times-circle"></i> Rejected
+                                    </button>
+                                {% endif %}
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
@@ -66,4 +274,18 @@
     </a>
 </div>
 {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize tooltips if needed
+    document.addEventListener('DOMContentLoaded', function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+        tooltipTriggerList.forEach(function(el) {
+            if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+                new bootstrap.Tooltip(el);
+            }
+        });
+    });
+</script>
 {% endblock %}

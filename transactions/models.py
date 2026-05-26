@@ -166,3 +166,43 @@ class ActivityLog(models.Model):
     
     def __str__(self):
         return f"{self.user.username if self.user else 'Deleted User'} - {self.log_type} - {self.timestamp.strftime('%Y-%m-%d %H:%M')}"
+
+
+class RegistrationLog(models.Model):
+    """Audit log for registration activities"""
+    ACTION_CHOICES = (
+        ('registration_submitted', 'Registration Submitted'),
+        ('auto_approved', 'Auto-Approved via Resident List'),
+        ('approved', 'Approved by Staff'),
+        ('rejected', 'Rejected by Staff'),
+        ('resident_added', 'Resident Added'),
+        ('resident_updated', 'Resident Updated'),
+        ('resident_deleted', 'Resident Deleted'),
+    )
+    
+    timestamp = models.DateTimeField(auto_now_add=True)
+    actor = models.ForeignKey(
+        'accounts.CustomUser',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='registration_logs_created'
+    )
+    action = models.CharField(max_length=50, choices=ACTION_CHOICES)
+    subject_user = models.ForeignKey(
+        'accounts.CustomUser',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='registration_logs'
+    )
+    details = models.TextField(blank=True)
+    
+    class Meta:
+        ordering = ['-timestamp']
+        verbose_name = 'Registration Log'
+        verbose_name_plural = 'Registration Logs'
+    
+    def __str__(self):
+        actor_name = self.actor.get_full_name() if self.actor else 'System'
+        return f"[{self.get_action_display()}] by {actor_name} - {self.timestamp.strftime('%Y-%m-%d %H:%M')}"

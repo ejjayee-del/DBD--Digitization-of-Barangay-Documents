@@ -2,6 +2,138 @@
 
 {% block title %}My Activity Log - DBD{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* ===== RESPONSIVE TABLE STYLES FOR MOBILE ===== */
+    @media (max-width: 768px) {
+        /* Convert table to card/list view on mobile */
+        .activity-log-responsive {
+            display: block;
+            width: 100%;
+        }
+        
+        .activity-log-responsive table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        /* Hide table headers on mobile */
+        .activity-log-responsive thead {
+            display: none;
+        }
+        
+        /* Convert each row into a card-like block */
+        .activity-log-responsive tbody tr {
+            display: block;
+            margin-bottom: 1rem;
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+            background-color: white;
+            padding: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        /* Each cell becomes a flex row with label */
+        .activity-log-responsive tbody td {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            padding: 0.6rem 0.25rem;
+            border: none;
+            border-bottom: 1px solid #f0f0f0;
+            text-align: left;
+        }
+        
+        .activity-log-responsive tbody td:last-child {
+            border-bottom: none;
+        }
+        
+        /* Add data-label dynamically via pseudo-element */
+        .activity-log-responsive tbody td:before {
+            content: attr(data-label);
+            font-weight: 600;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: #6c757d;
+            letter-spacing: 0.3px;
+            width: 35%;
+            flex-shrink: 0;
+        }
+        
+        /* Ensure content wraps properly */
+        .activity-log-responsive tbody td span,
+        .activity-log-responsive tbody td .badge {
+            width: 60%;
+            text-align: right;
+            word-break: break-word;
+        }
+        
+        /* Ensure badge displays correctly */
+        .activity-log-responsive tbody td .badge {
+            display: inline-block;
+            width: auto;
+            text-align: center;
+            white-space: normal;
+            word-break: keep-all;
+        }
+        
+        /* Description cell needs proper alignment for longer text */
+        .activity-log-responsive tbody td[data-label="Description"] {
+            align-items: flex-start;
+        }
+        
+        .activity-log-responsive tbody td[data-label="Description"] span {
+            text-align: right;
+            line-height: 1.4;
+        }
+        
+        /* Date & Time cell */
+        .activity-log-responsive tbody td[data-label="Date & Time"] span {
+            text-align: right;
+        }
+    }
+    
+    /* Additional tiny screen optimizations */
+    @media (max-width: 480px) {
+        .activity-log-responsive tbody td:before {
+            width: 40%;
+            font-size: 0.65rem;
+        }
+        .activity-log-responsive tbody td span,
+        .activity-log-responsive tbody td .badge {
+            width: 55%;
+            font-size: 0.75rem;
+        }
+        .activity-log-responsive tbody td .badge {
+            font-size: 0.7rem;
+            padding: 0.25rem 0.5rem;
+        }
+    }
+    
+    /* Keep original table styling intact for desktop */
+    @media (min-width: 769px) {
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+    }
+    
+    /* Touch-friendly improvements for mobile */
+    @media (max-width: 768px) {
+        .activity-log-responsive tbody tr {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .activity-log-responsive tbody tr:active {
+            background-color: #f8f9fa;
+            transform: scale(0.99);
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="mb-4">
     <h1 class="display-6"><i class="fas fa-history"></i> My Activity Log</h1>
@@ -11,7 +143,8 @@
 {% if activities %}
 <div class="card">
     <div class="card-body p-0">
-        <div class="table-responsive">
+        <!-- Added responsive wrapper class for mobile transformation -->
+        <div class="activity-log-responsive">
             <table class="table table-hover mb-0">
                 <thead class="table-light">
                     <tr>
@@ -23,11 +156,15 @@
                 <tbody>
                     {% for activity in activities %}
                     <tr>
-                        <td>
+                        <td data-label="Activity">
                             <span class="badge bg-primary">{{ activity.get_log_type_display }}</span>
                         </td>
-                        <td>{{ activity.action_description }}</td>
-                        <td>{{ activity.timestamp|date:"M d, Y H:i" }}</td>
+                        <td data-label="Description">
+                            <span>{{ activity.action_description }}</span>
+                        </td>
+                        <td data-label="Date & Time">
+                            <span>{{ activity.timestamp|date:"M d, Y H:i" }}</span>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>

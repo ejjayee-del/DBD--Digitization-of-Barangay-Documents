@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+
+{% block title %}View Certificate - DBD{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* All the certificate styling from preview_certificate.html */
+    .preview-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .certificate-doc {
+        font-family: 'Times New Roman', Times, serif;
+        background-color: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        position: relative;
+        width: 100%;
+        max-width: 900px;
+        margin: 20px auto;
+        box-sizing: border-box;
+    }
+    
+    .certificate-doc .doc-content {
+        position: relative;
+        z-index: 1;
+        line-height: 1.75;
+        font-size: 14px;
+        text-align: justify;
+        padding: 40px;
+        box-sizing: border-box;
+    }
+    
+    .certificate-watermark {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        opacity: 0.08;
+        width: 40%;
+        max-width: 320px;
+        min-width: 150px;
+        pointer-events: none;
+        z-index: 0;
+    }
+    
+    .certificate-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        gap: 15px;
+        flex-wrap: nowrap;
+    }
+    
+    .certificate-header .logo-left,
+    .certificate-header .logo-right {
+        flex-shrink: 0;
+    }
+    
+    .certificate-header .logo-left img,
+    .certificate-header .logo-right img {
+        width: 100px;
+        height: auto;
+        display: block;
+    }
+    
+    .certificate-header .header-text {
+        flex: 1;
+        text-align: center;
+        min-width: 0;
+    }
+    
+    .certificate-header .header-text .republic-text {
+        font-size: 14px;
+        font-weight: normal;
+        text-transform: uppercase;
+        margin: 0;
+    }
+    
+    .certificate-header .header-text .province-text {
+        font-size: 13px;
+        margin-top: 3px;
+    }
+    
+    .certificate-header .header-text .municipality-text {
+        font-size: 13px;
+        margin-top: 2px;
+    }
+    
+    .certificate-header .header-text .barangay-text {
+        font-size: 16px;
+        font-weight: bold;
+        margin-top: 5px;
+        text-transform: uppercase;
+    }
+    
+    .certificate-header .header-text .separator {
+        text-align: center;
+        margin: 5px 0;
+        font-size: 14px;
+    }
+    
+    .certificate-header .header-text .office-text {
+        text-align: center;
+        font-size: 14px;
+        font-weight: bold;
+        margin-top: 5px;
+    }
+    
+    .certificate-doc .doc-title {
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        margin: 20px 0;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+    
+    .certificate-content {
+        font-family: 'Times New Roman', Times, serif;
+        text-align: justify;
+    }
+    
+    .certificate-content p {
+        margin-bottom: 1rem;
+    }
+    
+    .signature-section {
+        margin-top: 50px;
+        text-align: right;
+    }
+    
+    .certificate-footer {
+        margin-top: 40px;
+        font-size: 0.8rem;
+        color: #999;
+        text-align: center;
+    }
+    
+    /* Back button styling */
+    .back-button-container {
+        max-width: 900px;
+        margin: 0 auto 20px auto;
+        text-align: left;
+    }
+    
+    .btn-back {
+        background-color: #6c757d;
+        color: white;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 6px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-back:hover {
+        background-color: #5a6268;
+        transform: translateX(-2px);
+        color: white;
+        text-decoration: none;
+    }
+    
+    /* Responsive styles */
+    @media (max-width: 768px) {
+        .certificate-doc .doc-content {
+            padding: 20px;
+        }
+        .certificate-header {
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        .certificate-header .logo-left img,
+        .certificate-header .logo-right img {
+            width: 60px;
+        }
+        .certificate-doc .doc-title {
+            font-size: 16px;
+        }
+        .btn-back {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+    }
+    
+    @media print {
+        .navbar, .footer, .back-button-container, .btn-back {
+            display: none !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Back Button -->
+    <div class="back-button-container">
+        <a href="{% url 'certificates:my_requests' %}" class="btn-back">
+            <i class="fas fa-arrow-left"></i> Back to My Requests
+        </a>
+    </div>
+    
+    <!-- Certificate Display -->
+    <div class="preview-wrapper">
+        <div class="certificate-doc">
+            <img src="/media/logos/logobrgy3.png" class="certificate-watermark" alt="Watermark">
+            <div class="doc-content">
+                <!-- Header with logos -->
+                <div class="certificate-header">
+                    <div class="logo-left">
+                        <img src="/media/logos/logobrgy.png" alt="Barangay Logo Left">
+                    </div>
+                    <div class="header-text">
+                        <div class="republic-text">Republic of the Philippines</div>
+                        <div class="province-text">Province of Negros Oriental</div>
+                        <div class="municipality-text">Municipality of Basay</div>
+                        <div class="barangay-text">BARANGAY MAGLINAO</div>
+                        <div class="separator">-o0o-</div>
+                        <div class="office-text">OFFICE OF THE PUNONG BARANGAY</div>
+                    </div>
+                    <div class="logo-right">
+                        <img src="/media/logos/logobrgy2.png" alt="Barangay Logo Right">
+                    </div>
+                </div>
+
+                <div class="doc-title">
+                    {{ certificate.template.template_name }}
+                </div>
+
+                <!-- Certificate content -->
+                <div class="certificate-content">
+                    {{ rendered_content|safe }}
+                </div>
+
+                <!-- Signature -->
+                <div class="signature-section">
+                    <strong>ELMER D. ETOC</strong><br>
+                    <span>Punong Barangay</span>
+                </div>
+
+                <div class="certificate-footer">
+                    <i class="fas fa-calendar-alt me-1"></i> Issued on {{ certificate.created_date|date:"F d, Y" }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

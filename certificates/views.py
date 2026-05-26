@@ -36,6 +36,27 @@ class EditableCertificateForm(forms.ModelForm):
         }
 
 
+def _prepare_requester_dynamic_form(dynamic_form):
+    """Remove requester-only dynamic fields and auto-fill the date field."""
+    for field_name in ('day', 'month', 'year', 'number', 'amount_paid', 'date_paid'):
+        if field_name in dynamic_form.fields:
+            del dynamic_form.fields[field_name]
+
+    if 'date' in dynamic_form.fields:
+        date_field = dynamic_form.fields['date']
+        dynamic_form.fields['date'] = forms.DateField(
+            label=date_field.label,
+            required=date_field.required,
+            help_text=date_field.help_text,
+            initial=timezone.now().date(),
+            widget=forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date',
+                'readonly': 'readonly'
+            })
+        )
+
+
 @login_required
 @require_http_methods(["GET"])
 def certificate_types_view(request):
@@ -88,7 +109,17 @@ def generate_certificate_view(request, template_id):
             certificate.template = template
             certificate.created_by = request.user
             certificate.status = 'generated'
-            certificate.certificate_data = dynamic_form.cleaned_data
+            
+            # Convert Decimal values to strings or floats before storing as JSON
+            from decimal import Decimal
+            cleaned_data = dynamic_form.cleaned_data
+            for key, value in cleaned_data.items():
+                if isinstance(value, Decimal):
+                    # Convert Decimal to string (preserves precision) OR float (loses precision)
+                    cleaned_data[key] = str(value)  # Using string for precision
+                    # Alternatively use: cleaned_data[key] = float(value)
+            
+            certificate.certificate_data = cleaned_data
             certificate.save()
             
             # Generate PDF and Word files - lazy import
@@ -133,22 +164,34 @@ def preview_certificate_view(request, certificate_id):
     certificate = get_object_or_404(GeneratedCertificate, id=certificate_id)
     
     # Check permission
-    if certificate.created_by != request.user and not request.user.can_view_history:
+    is_staff = request.user.can_view_history
+    is_requester_owner = (request.user.role == 'requester' and 
+                          certificate.certificate_request and 
+                          certificate.certificate_request.requester == request.user)
+    is_creator = certificate.created_by == request.user
+    
+    if not (is_staff or is_requester_owner or is_creator):
         messages.error(request, 'You do not have permission to view this certificate.')
         return redirect('dashboard')
     
     # Render the HTML template with certificate data
     from django.template import Template, Context
     template = Template(certificate.template.html_template)
-    context = Context(certificate.certificate_data)
-    rendered_content = template.render(context)
+    context_data = Context(certificate.certificate_data)
+    rendered_content = template.render(context_data)
     
     context = {
         'certificate': certificate,
         'rendered_content': rendered_content,
     }
     
-    return render(request, 'certificates/preview_certificate.html', context)
+    # Use different templates for staff vs requester
+    if request.user.role == 'requester':
+        # Requesters see view-only template (no edit/print/release buttons)
+        return render(request, 'certificates/view_certificate_only.html', context)
+    else:
+        # Staff/Admin see full preview with all action buttons
+        return render(request, 'certificates/preview_certificate.html', context)
 
 
 @login_required
@@ -390,20 +433,36 @@ def request_certificate_view(request, template_id):
     if request.method == 'POST':
         form = CertificateGenerationForm(request.POST)
         dynamic_form = DynamicCertificateForm(template, request.POST)
-        
-        if form.is_valid() and dynamic_form.is_valid():
-            # Create certificate request
+        _prepare_requester_dynamic_form(dynamic_form)
+
+        if request.POST.get('confirm') and form.is_valid() and dynamic_form.is_valid():
+            request_data = dynamic_form.cleaned_data.copy()
+            
+            # Convert Decimal values to string for JSON serialization
+            from decimal import Decimal
+            for key, value in request_data.items():
+                if isinstance(value, Decimal):
+                    request_data[key] = str(value)
+            
+            now = timezone.now()
+            request_data['date'] = now.strftime('%B %d, %Y')
+            request_data['day'] = now.strftime('%d')
+            request_data['month'] = now.strftime('%B')
+            request_data['year'] = now.strftime('%Y')
+            request_data.setdefault('number', '')
+            request_data.setdefault('amount_paid', '')
+            request_data.setdefault('date_paid', '')
+
             cert_request = CertificateRequest.objects.create(
                 template=template,
                 requester=request.user,
                 recipient_name=form.cleaned_data['recipient_name'],
                 recipient_email=form.cleaned_data.get('recipient_email', ''),
                 recipient_contact=form.cleaned_data.get('recipient_contact', ''),
-                request_data=dynamic_form.cleaned_data,
+                request_data=request_data,
                 status='pending'
             )
 
-            # Auto-create a VisitHistory record (certificate request = visit record)
             from transactions.models import VisitHistory
             VisitHistory.objects.create(
                 requester=request.user,
@@ -412,7 +471,6 @@ def request_certificate_view(request, template_id):
                 purpose_of_visit=f"Certificate Request: {template.template_name}",
             )
             
-            # Log the activity
             ActivityLog.objects.create(
                 user=request.user,
                 log_type='certificate_requested',
@@ -422,9 +480,48 @@ def request_certificate_view(request, template_id):
             
             messages.success(request, 'Certificate request submitted successfully!')
             return redirect('certificates:my_requests')
+
+        if request.POST.get('edit'):
+            # Re-bind forms so the user can correct mistakes
+            form = CertificateGenerationForm(request.POST)
+            dynamic_form = DynamicCertificateForm(template, request.POST)
+            _prepare_requester_dynamic_form(dynamic_form)
+
+        elif form.is_valid() and dynamic_form.is_valid():
+            preview_data = dynamic_form.cleaned_data.copy()
+            
+            # Convert Decimal values to string for JSON serialization
+            from decimal import Decimal
+            for key, value in preview_data.items():
+                if isinstance(value, Decimal):
+                    preview_data[key] = str(value)
+            
+            now = timezone.now()
+            preview_data.setdefault('date', now.strftime('%B %d, %Y'))
+            preview_data.setdefault('day', now.strftime('%d'))
+            preview_data.setdefault('month', now.strftime('%B'))
+            preview_data.setdefault('year', now.strftime('%Y'))
+            preview_data.setdefault('number', '')
+            preview_data.setdefault('amount_paid', '')
+            preview_data.setdefault('date_paid', '')
+
+            from django.template import Template, Context
+            render_ctx = Context({**preview_data, 'recipient_name': form.cleaned_data.get('recipient_name')})
+            template_obj = Template(template.html_template)
+            rendered_content = template_obj.render(render_ctx)
+
+            context = {
+                'template': template,
+                'form': form,
+                'dynamic_form': dynamic_form,
+                'rendered_content': rendered_content,
+                'posted_data': request.POST,
+            }
+            return render(request, 'certificates/preview_request.html', context)
     else:
         form = CertificateGenerationForm()
         dynamic_form = DynamicCertificateForm(template)
+        _prepare_requester_dynamic_form(dynamic_form)
     
     context = {
         'template': template,
@@ -451,6 +548,47 @@ def my_requests_view(request):
 
     return render(request, 'certificates/my_requests.html', context)
 
+@login_required
+@require_http_methods(["GET", "POST"])
+def release_certificate_view(request, certificate_id):
+    """Release a certificate to the requester (mark as released/completed)"""
+    if not request.user.can_print_certificates:
+        messages.error(request, 'You do not have permission to release certificates.')
+        return redirect('dashboard')
+    
+    certificate = get_object_or_404(GeneratedCertificate, id=certificate_id)
+    
+    if request.method == 'POST':
+        # Mark certificate as released
+        certificate.status = 'released'
+        certificate.released_date = timezone.now()
+        certificate.released_by = request.user
+        certificate.save()
+        
+        # Update related certificate request if exists
+        try:
+            cert_request = CertificateRequest.objects.get(generated_certificate=certificate)
+            cert_request.status = 'completed'
+            cert_request.save()
+        except CertificateRequest.DoesNotExist:
+            pass
+        
+        # Log the activity
+        ActivityLog.objects.create(
+            user=request.user,
+            log_type='certificate_released',
+            action_description=f"Released {certificate.template.template_name} for {certificate.recipient_name}",
+            object_id=certificate.id,
+        )
+        
+        messages.success(request, 'Certificate released successfully!')
+        return redirect('certificates:manage_requests')
+    
+    context = {
+        'certificate': certificate,
+    }
+    
+    return render(request, 'certificates/release_certificate.html', context)
 
 @login_required
 @require_http_methods(["GET"])
@@ -472,6 +610,30 @@ def manage_requests_view(request):
     }
     
     return render(request, 'certificates/manage_requests.html', context)
+
+
+@login_required
+@require_http_methods(["GET"])
+def preview_request_staff_view(request, request_id):
+    """Preview a certificate request for staff before approval"""
+    if not request.user.can_print_certificates:
+        messages.error(request, 'You do not have permission to view this request.')
+        return redirect('dashboard')
+    
+    cert_request = get_object_or_404(CertificateRequest, id=request_id)
+    
+    # Render the HTML template with request data
+    from django.template import Template, Context
+    template = Template(cert_request.template.html_template)
+    context = Context(cert_request.request_data)
+    rendered_content = template.render(context)
+    
+    context = {
+        'cert_request': cert_request,
+        'rendered_content': rendered_content,
+    }
+    
+    return render(request, 'certificates/preview_request_staff.html', context)
 
 
 @login_required

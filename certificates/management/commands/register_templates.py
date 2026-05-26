@@ -160,5 +160,7 @@ class Command(BaseCommand):
             return 'date'
         elif 'address' in field_lower or 'location' in field_lower:
             return 'textarea'
+        elif 'income' in field_lower or 'salary' in field_lower or 'amount' in field_lower or 'wage' in field_lower or 'earnings' in field_lower:
+            return 'number'
         else:
             return 'text'

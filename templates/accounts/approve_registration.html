@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}Approve Registration - Barangay Certificate System{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-body p-5">
+                    <h2 class="card-title text-center mb-4" style="color: var(--primary-color);">
+                        <i class="fas fa-check-circle"></i> Approve Registration
+                    </h2>
+
+                    <div class="registration-details mb-4">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>First Name:</strong></p>
+                                <p class="text-muted">{{ registration.first_name }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Last Name:</strong></p>
+                                <p class="text-muted">{{ registration.last_name }}</p>
+                            </div>
+                        </div>
+
+                        <p><strong>Email:</strong></p>
+                        <p class="text-muted">{{ registration.email }}</p>
+
+                        <p><strong>Username:</strong></p>
+                        <p class="text-muted">{{ registration.username }}</p>
+
+                        <p><strong>Address:</strong></p>
+                        <p class="text-muted">{{ registration.address }}</p>
+
+                        <p><strong>Birthday:</strong></p>
+                        <p class="text-muted">{{ registration.birthday|default:"Not provided" }}</p>
+
+                        <p><strong>Contact Number:</strong></p>
+                        <p class="text-muted">{{ registration.contact_number }}</p>
+
+                        <p><strong>Registration Date:</strong></p>
+                        <p class="text-muted">{{ registration.registration_date|date:"M d, Y H:i" }}</p>
+                    </div>
+
+                    <hr>
+
+                    <form method="POST" class="mt-4">
+                        {% csrf_token %}
+                        <div class="alert alert-success" role="alert">
+                            <i class="fas fa-check"></i> Click below to approve this registration.
+                        </div>
+
+                        <button type="submit" class="btn btn-lg btn-success w-100">
+                            <i class="fas fa-thumbs-up"></i> Approve Registration
+                        </button>
+                    </form>
+
+                    <a href="{% url 'accounts:manage_registrations' %}" class="btn btn-lg btn-secondary w-100 mt-2">
+                        <i class="fas fa-arrow-left"></i> Back to List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
