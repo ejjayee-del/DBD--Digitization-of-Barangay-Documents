@@ -4,15 +4,14 @@ Generates certificates from Word templates with placeholder replacement and sign
 """
 
 import os
-import re
 from datetime import datetime
 from io import BytesIO
-from pathlib import Path
 
+from bs4 import BeautifulSoup
 from django.conf import settings
 from django.core.files.base import ContentFile
+from django.template import Context, Template
 from docx import Document
-from docx.shared import Inches, Pt
 
 from .models import GeneratedCertificate
 
@@ -94,6 +93,64 @@ class CertificateDocumentGenerator:
         doc.save(buffer)
         buffer.seek(0)
         return buffer
+
+    def generate_from_html_template(self):
+        """
+        Generate a simple Word document from the HTML template when the original
+        .docx template file is unavailable.
+        """
+        self._prepare_data()
+
+        template = Template(self.template.html_template or "")
+        rendered_html = template.render(Context(self.data))
+        soup = BeautifulSoup(rendered_html, "html.parser")
+
+        doc = Document()
+        doc.add_heading(self.template.template_name, level=1)
+        doc.add_paragraph(f"Recipient: {self.certificate.recipient_name}")
+        doc.add_paragraph("")
+
+        content_nodes = soup.find_all(["h1", "h2", "h3", "h4", "p", "li", "br", "table"])
+        if not content_nodes:
+            plain_text = soup.get_text("\n", strip=True)
+            if plain_text:
+                for line in plain_text.splitlines():
+                    if line.strip():
+                        doc.add_paragraph(line.strip())
+        else:
+            for node in content_nodes:
+                if node.name in {"h1", "h2", "h3", "h4"}:
+                    level = min(int(node.name[1]), 4)
+                    text = node.get_text(" ", strip=True)
+                    if text:
+                        doc.add_heading(text, level=level)
+                elif node.name == "p":
+                    text = node.get_text(" ", strip=True)
+                    if text:
+                        doc.add_paragraph(text)
+                elif node.name == "li":
+                    text = node.get_text(" ", strip=True)
+                    if text:
+                        doc.add_paragraph(text, style="List Bullet")
+                elif node.name == "br":
+                    doc.add_paragraph("")
+                elif node.name == "table":
+                    rows = node.find_all("tr")
+                    if not rows:
+                        continue
+                    col_count = max(len(row.find_all(["td", "th"])) for row in rows)
+                    if col_count == 0:
+                        continue
+                    table = doc.add_table(rows=len(rows), cols=col_count)
+                    for row_index, row in enumerate(rows):
+                        cells = row.find_all(["td", "th"])
+                        for col_index, cell in enumerate(cells):
+                            table.cell(row_index, col_index).text = cell.get_text(" ", strip=True)
+
+        buffer = BytesIO()
+        doc.save(buffer)
+        buffer.seek(0)
+        return buffer
     
     def save_generated_document(self, template_path, certificate_obj=None):
         """Generate document and save to certificate."""
@@ -118,9 +175,21 @@ class CertificateDocumentGenerator:
         """Save certificate using template file."""
         if certificate_obj is None:
             certificate_obj = self.certificate
-        
-        if not self.template.template_file:
-            raise ValueError(f"No template file configured for {self.template.template_name}")
-        
-        template_path = self.template.template_file.path
-        return self.save_generated_document(template_path, certificate_obj)
+
+        template_path = None
+        if self.template.template_file:
+            try:
+                template_path = self.template.template_file.path
+            except (ValueError, NotImplementedError):
+                template_path = None
+
+        if template_path and os.path.exists(template_path):
+            return self.save_generated_document(template_path, certificate_obj)
+
+        doc_buffer = self.generate_from_html_template()
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        recipient_name = self.certificate.recipient_name.replace(' ', '_')[:30]
+        template_name = self.template.template_type
+        docx_filename = f"{template_name}_{recipient_name}_{timestamp}.docx"
+        certificate_obj.docx_file.save(docx_filename, ContentFile(doc_buffer.getvalue()), save=True)
+        return certificate_obj.docx_file.path

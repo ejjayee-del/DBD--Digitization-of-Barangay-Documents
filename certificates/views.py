@@ -127,12 +127,11 @@ def generate_certificate_view(request, template_id):
                 from .document_generator import CertificateDocumentGenerator
                 generator = CertificateDocumentGenerator(certificate)
                 generator.save_files(certificate)
-            except ImportError as e:
-                # Log the exception and notify user
+            except Exception as e:
                 import logging
                 logger = logging.getLogger(__name__)
-                logger.error(f"Document generation failed: {e}")
-                messages.warning(request, 'Certificate saved but document generation is currently unavailable. Please contact an administrator.')
+                logger.exception("Document generation failed")
+                messages.warning(request, f'Certificate saved but Word generation had an issue: {e}')
             
             # Log the activity
             ActivityLog.objects.create(
@@ -347,8 +346,10 @@ def edit_certificate_view(request, certificate_id):
                 from .document_generator import CertificateDocumentGenerator
                 generator = CertificateDocumentGenerator(certificate)
                 generator.save_files(certificate)
-            except ImportError:
-                pass
+            except Exception:
+                import logging
+                logging.getLogger(__name__).exception("Document regeneration failed")
+                messages.warning(request, 'Certificate updated, but the Word file could not be regenerated.')
             
             messages.success(request, 'Certificate updated successfully!')
             return redirect('certificates:preview', certificate_id=certificate.id)
@@ -677,8 +678,10 @@ def approve_request_view(request, request_id):
         from .document_generator import CertificateDocumentGenerator
         generator = CertificateDocumentGenerator(certificate)
         generator.save_files(certificate)
-    except ImportError:
-        pass
+    except Exception:
+        import logging
+        logging.getLogger(__name__).exception("Request approval document generation failed")
+        messages.warning(request, 'Request approved, but the Word file was generated from fallback content or could not be created from the old template path.')
     
     # Log activities
     ActivityLog.objects.create(
