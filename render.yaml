@@ -3,5 +3,6 @@ services:
     name: dbd-digitization-of-barangay-documents
     env: python
     buildCommand: "bash ./build.sh"
-    startCommand: "bash ./start.sh"
+    preDeployCommand: "python manage.py migrate --noinput"
+    startCommand: "gunicorn dbd_config.wsgi:application --bind 0.0.0.0:$PORT"
     autoDeploy: true
