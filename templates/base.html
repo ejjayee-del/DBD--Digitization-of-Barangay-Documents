@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -342,8 +343,8 @@
             {% endif %}
             
             <!-- Brand / Logo – stable alignment -->
-            <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'dashboard' %}">
-                <img src="/media/logos/logobrgy2.png" alt="Barangay Maglina Logo" style="height: 40px; width: 40px; object-fit: contain; border-radius: 50%;" onerror="this.onerror=null;this.src='https://via.placeholder.com/40?text=DBD';">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="{% if user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'home' %}{% endif %}">
+                <img src="{% static 'logos/logobrgy2.svg' %}" alt="Barangay Maglinao Logo" style="height: 40px; width: 40px; object-fit: contain; border-radius: 50%;">
                 <span>DBD</span>
             </a>
             

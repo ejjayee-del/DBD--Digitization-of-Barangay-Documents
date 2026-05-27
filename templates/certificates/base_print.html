@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -279,11 +280,11 @@
 
     <div class="print-container">
         <!-- Background watermark logo -->
-        <img src="/media/logos/logobrgy3.png" class="background-logo" alt="Background Logo">
+        <img src="{% static 'logos/logobrgy3.svg' %}" class="background-logo" alt="Background Logo">
 
         <!-- Header with left and right logos -->
         <div class="header-row">
-            <img src="/media/logos/logobrgy.png" class="left-logo" alt="Barangay Logo Left">
+            <img src="{% static 'logos/logobrgy.svg' %}" class="left-logo" alt="Barangay Logo Left">
             <div class="header-text">
                 <div class="republic">Republic of the Philippines</div>
                 <div class="province">Province of Negros Oriental</div>
@@ -292,7 +293,7 @@
                 <div class="separator">-o0o-</div>
                 <div class="office-title">OFFICE OF THE PUNONG BARANGAY</div>
             </div>
-            <img src="/media/logos/logobrgy2.png" class="right-logo" alt="Barangay Logo Right">
+            <img src="{% static 'logos/logobrgy2.svg' %}" class="right-logo" alt="Barangay Logo Right">
         </div>
 
         <div class="certificate-title">

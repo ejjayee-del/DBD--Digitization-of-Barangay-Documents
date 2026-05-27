@@ -148,7 +148,6 @@ def logout_view(request):
     messages.success(request, 'You have been logged out successfully.')
     return redirect('accounts:login')
 
-
 @login_required
 def dashboard_view(request):
     """Dashboard - shows different content based on user role"""

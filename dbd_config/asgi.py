@@ -11,6 +11,10 @@ import os
 
 from django.core.asgi import get_asgi_application
 
+from .startup import apply_startup_migrations
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'dbd_config.settings')
+
+apply_startup_migrations()
 
 application = get_asgi_application()

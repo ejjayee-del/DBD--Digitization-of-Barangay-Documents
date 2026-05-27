@@ -1,0 +1,9 @@
+Django>=4.2,<5.0
+beautifulsoup4>=4.12,<5
+dj-database-url>=2.2,<3
+django-summernote>=0.8.20
+gunicorn>=22,<24
+Pillow>=10,<12
+psycopg[binary]>=3.1,<4
+python-docx>=1.1,<2
+whitenoise>=6.7,<7
