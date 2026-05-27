@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: dbd-digitization-of-barangay-documents
+    env: python
+    buildCommand: "bash ./build.sh"
+    startCommand: "bash ./start.sh"
+    autoDeploy: true

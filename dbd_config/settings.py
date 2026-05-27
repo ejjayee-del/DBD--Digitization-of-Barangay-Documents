@@ -11,6 +11,7 @@ import dj_database_url
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+RENDER_DISK_PATH = os.getenv("RENDER_DISK_PATH", "").strip()
 
 
 def env_bool(name, default=False):
@@ -114,10 +115,12 @@ if DATABASE_URL:
         "default": dj_database_url.parse(DATABASE_URL, conn_max_age=600, ssl_require=False),
     }
 else:
+    sqlite_dir = Path(RENDER_DISK_PATH) if RENDER_DISK_PATH else BASE_DIR
+    sqlite_dir.mkdir(parents=True, exist_ok=True)
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "db.sqlite3",
+            "NAME": sqlite_dir / "db.sqlite3",
         }
     }
 
@@ -153,7 +156,8 @@ STATICFILES_DIRS = [BASE_DIR / "staticfiles"]
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 MEDIA_URL = "/media/"
-MEDIA_ROOT = Path(os.getenv("MEDIA_ROOT", str(BASE_DIR / "media")))
+default_media_root = Path(RENDER_DISK_PATH) / "media" if RENDER_DISK_PATH else BASE_DIR / "media"
+MEDIA_ROOT = Path(os.getenv("MEDIA_ROOT", str(default_media_root)))
 
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
