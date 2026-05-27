@@ -3,6 +3,69 @@
 from django.db import migrations
 
 
+def _table_exists(schema_editor, table_name):
+    with schema_editor.connection.cursor() as cursor:
+        tables = schema_editor.connection.introspection.table_names(cursor)
+    return table_name in tables
+
+
+def _column_names(schema_editor, table_name):
+    with schema_editor.connection.cursor() as cursor:
+        description = schema_editor.connection.introspection.get_table_description(cursor, table_name)
+    return {column.name for column in description}
+
+
+def fix_certificaterequest_schema(apps, schema_editor):
+    table_name = "certificates_certificaterequest"
+
+    if not _table_exists(schema_editor, table_name):
+        return
+
+    columns = _column_names(schema_editor, table_name)
+
+    # Fresh databases created by 0006 already have the desired schema.
+    if {
+        "recipient_name",
+        "recipient_email",
+        "recipient_contact",
+        "requester_id",
+        "reviewed_by_id",
+        "reviewed_date",
+    }.issubset(columns):
+        return
+
+    statements = []
+
+    if "recipient_name" not in columns:
+        statements.append(
+            "ALTER TABLE certificates_certificaterequest ADD COLUMN recipient_name VARCHAR(300) NOT NULL DEFAULT '';"
+        )
+    if "recipient_email" not in columns:
+        statements.append(
+            "ALTER TABLE certificates_certificaterequest ADD COLUMN recipient_email VARCHAR(254) DEFAULT NULL;"
+        )
+    if "recipient_contact" not in columns:
+        statements.append(
+            "ALTER TABLE certificates_certificaterequest ADD COLUMN recipient_contact VARCHAR(20) DEFAULT NULL;"
+        )
+
+    if "requested_by_id" in columns and "requester_id" not in columns:
+        statements.append(
+            "ALTER TABLE certificates_certificaterequest RENAME COLUMN requested_by_id TO requester_id;"
+        )
+    if "processed_by_id" in columns and "reviewed_by_id" not in columns:
+        statements.append(
+            "ALTER TABLE certificates_certificaterequest RENAME COLUMN processed_by_id TO reviewed_by_id;"
+        )
+    if "processed_date" in columns and "reviewed_date" not in columns:
+        statements.append(
+            "ALTER TABLE certificates_certificaterequest RENAME COLUMN processed_date TO reviewed_date;"
+        )
+
+    for statement in statements:
+        schema_editor.execute(statement)
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -10,45 +73,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        # Use raw SQL to fix the table schema since the existing table has wrong structure
-        migrations.RunSQL(
-            # Rename columns and add missing ones
-            """
-            ALTER TABLE certificates_certificaterequest ADD COLUMN recipient_name VARCHAR(300) NOT NULL DEFAULT '';
-            ALTER TABLE certificates_certificaterequest ADD COLUMN recipient_email VARCHAR(254) DEFAULT NULL;
-            ALTER TABLE certificates_certificaterequest ADD COLUMN recipient_contact VARCHAR(20) DEFAULT NULL;
-            """,
-            # Reverse operations (for rollback)
-            """
-            ALTER TABLE certificates_certificaterequest DROP COLUMN recipient_name;
-            ALTER TABLE certificates_certificaterequest DROP COLUMN recipient_email;
-            ALTER TABLE certificates_certificaterequest DROP COLUMN recipient_contact;
-            """
-        ),
-        migrations.RunSQL(
-            # Rename columns using SQLite syntax
-            """
-            ALTER TABLE certificates_certificaterequest RENAME COLUMN requested_by_id TO requester_id;
-            ALTER TABLE certificates_certificaterequest RENAME COLUMN processed_by_id TO reviewed_by_id;
-            ALTER TABLE certificates_certificaterequest RENAME COLUMN processed_date TO reviewed_date;
-            """,
-            # Reverse operations
-            """
-            ALTER TABLE certificates_certificaterequest RENAME COLUMN requester_id TO requested_by_id;
-            ALTER TABLE certificates_certificaterequest RENAME COLUMN reviewed_by_id TO processed_by_id;
-            ALTER TABLE certificates_certificaterequest RENAME COLUMN reviewed_date TO processed_date;
-            """
-        ),
-        migrations.RunSQL(
-            # Remove notes column and make generated_certificate nullable
-            """
-            CREATE TABLE certificates_certificaterequest_temp AS SELECT id, requester_id, template_id, recipient_name, recipient_email, recipient_contact, request_data, status, reviewed_by_id, reviewed_date, rejection_reason, generated_certificate_id, created_date, updated_date FROM certificates_certificaterequest;
-            DROP TABLE certificates_certificaterequest;
-            ALTER TABLE certificates_certificaterequest_temp RENAME TO certificates_certificaterequest;
-            """,
-            # Reverse operation - recreate with old structure (complex, so we'll leave it)
-            """
-            -- Reverse would be complex, so not implementing for now
-            """
-        ),
+        migrations.RunPython(fix_certificaterequest_schema, migrations.RunPython.noop),
     ]
